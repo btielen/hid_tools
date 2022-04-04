@@ -1,6 +1,6 @@
 # HID-Tools
 
-This crates provides tools for working with the Human Interface Devices (HID) protocol. It 
+This crate provides tools for working with the Human Interface Devices (HID) protocol. It 
 can parse, build and display Report Descriptors. 
 
 ## Getting started
