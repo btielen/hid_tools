@@ -1,22 +1,25 @@
 # HID-Tools
 
-First attempt at parsing a raw HID (Human Interface Device) Report Descriptor 
-and displaying it in user-friendly way.
+This crates provides tools for working with the Human Interface Devices (HID) protocol. It 
+can parse, build and display Report Descriptors. 
 
 ## Getting started
 
-Following example prints every connected HID device on a linux-system.
+Following example parses a raw HID Report Descriptor
 
 ```rust
-use hid_tools::linux;
 use hid_tools::parse;
 
 fn main() {
-    for device in linux::list_devices().unwrap().iter() {
-        let report_bytes = device.report_descriptor_bytes().unwrap();
+    let bytes = [
+        0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x85, 0x01, 0x05, 0x07, 
+        0x19, 0xe0, 0x29, 0xe7, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 
+        0x95, 0x08, 0x81, 0x02, 0x19, 0x01, 0x29, 0x97, 0x15, 0x00, 
+        0x25, 0x01, 0x75, 0x01, 0x95, 0x98, 0x81, 0x02, 0xc0, 
+    ];
 
-        println!("{}", parse::report_descriptor(&report_bytes).unwrap())
-    }
+    let parsed = parse::report_descriptor(&bytes).unwrap();
+    println!("{}", parsed);
 }
 ```
 
@@ -67,6 +70,7 @@ fn main() {
 ## Todo
 
 - Display Input, Output, Feature (eg `INPUT (Data,Var,Rel)`)
+- Documentation
 - Convert more Usage tables (help wanted)
 
 
