@@ -1,3 +1,6 @@
+use crate::usage_table::UsageId;
+
+#[derive(Clone)]
 pub enum FIDOAllianceUsage {
     Undefined,
     U2FAuthenticatorDevice,
@@ -15,5 +18,23 @@ impl From<u16> for FIDOAllianceUsage {
             0x21 => FIDOAllianceUsage::OutputReportData,
             i => FIDOAllianceUsage::Reserved(i),
         }
+    }
+}
+
+impl From<FIDOAllianceUsage> for u16 {
+    fn from(value: FIDOAllianceUsage) -> Self {
+        match value {
+            FIDOAllianceUsage::Undefined => 0x00,
+            FIDOAllianceUsage::U2FAuthenticatorDevice => 0x01,
+            FIDOAllianceUsage::InputReportData => 0x20,
+            FIDOAllianceUsage::OutputReportData => 0x21,
+            FIDOAllianceUsage::Reserved(i) => i,
+        }
+    }
+}
+
+impl UsageId for FIDOAllianceUsage {
+    fn usage_id(self) -> u16 {
+        self.into()
     }
 }

@@ -42,11 +42,31 @@ Following is an example output for a 2-factor authentication usb-stick.
 [c0]                End Collection (0) 
 ```
 
+### Build a raw HID Descriptor Report
+
+```rust
+use hid_tools::report_builder::ReportDescriptorBuilder;
+use hid_tools::hid::Collection;
+use hid_tools::usage_table::{UsagePage};
+use hid_tools::usage_table::generic_desktop::GenericDesktopControlsUsage;
+
+fn main() {
+    let raw_report = ReportDescriptorBuilder::new()
+        .usage_page(UsagePage::GenericDesktopControls)
+        .usage(GenericDesktopControlsUsage::Mouse)
+        .item(Collection::Application)
+        // add more items here (see also examples)
+        .end_collection()
+        .build()
+        .bytes();
+
+    println!("{:02x?}", raw_report)
+}
+```
+
 ## Todo
 
-- Test negative numeric payloads (for example `Logical Minimum (-256)`)
-- Display Input (`INPUT (Data,Var,Rel)`)
-- ReportDescriptorBuilder
+- Display Input, Output, Feature (eg `INPUT (Data,Var,Rel)`)
 - Convert more Usage tables (help wanted)
 
 

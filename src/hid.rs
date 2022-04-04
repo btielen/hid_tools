@@ -1,16 +1,17 @@
-use crate::payload::{Payload, Size};
+use crate::data::{Size, SizedPayload};
+use crate::data::PrefixByte;
 use crate::usage_table::Usage;
 use crate::usage_table::UsagePage;
 
 /// HID Descriptor Report item type
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ItemType {
     Main(MainType),
     Global(GlobalType),
     Local(LocalType),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum MainType {
     Input,
     Output,
@@ -19,21 +20,7 @@ pub enum MainType {
     EndCollection,
 }
 
-// https://www.usb.org/sites/default/files/hid1_11.pdf - page 28
-#[derive(Debug, PartialEq)]
-pub enum Collection {
-    Physical,
-    Application,
-    Logical,
-    Report,
-    NamedArray,
-    UsageSwitch,
-    UsageModifier,
-    Reserved(u8),
-    VendorDefined(u8),
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum LocalType {
     Usage,
     UsageMinimum,
@@ -51,7 +38,7 @@ pub enum LocalType {
 /// assumes the characteristics of the item state table. Global items can change the
 /// state table. As a result Global item tags apply to all subsequently defined items
 /// unless overridden by another Global item.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum GlobalType {
     UsagePage,
     LogicalMinimum,
@@ -65,6 +52,20 @@ pub enum GlobalType {
     ReportCount,
     Push,
     Pop,
+}
+
+// https://www.usb.org/sites/default/files/hid1_11.pdf - page 28
+#[derive(Debug, PartialEq, Clone)]
+pub enum Collection {
+    Physical,
+    Application,
+    Logical,
+    Report,
+    NamedArray,
+    UsageSwitch,
+    UsageModifier,
+    Reserved(u8),
+    VendorDefined(u8),
 }
 
 impl From<u8> for Collection {
@@ -83,6 +84,22 @@ impl From<u8> for Collection {
     }
 }
 
+impl From<Collection> for u8 {
+    fn from(value: Collection) -> Self {
+        match value {
+            Collection::Physical => 0x00,
+            Collection::Application => 0x01,
+            Collection::Logical => 0x02,
+            Collection::Report => 0x03,
+            Collection::NamedArray => 0x04,
+            Collection::UsageSwitch => 0x05,
+            Collection::UsageModifier => 0x06,
+            Collection::Reserved(i) => i,
+            Collection::VendorDefined(i) => i,
+        }
+    }
+}
+
 /// Represents one item in the Report Descriptor. This is a variable-sized
 /// element with one header byte and 0, 1, 2, 4 payload bytes.
 #[derive(Debug, PartialEq)]
@@ -94,8 +111,18 @@ pub struct ReportDescriptorItem {
 
 impl ReportDescriptorItem {
     /// Get the raw payload of the Report Descriptor Item
-    pub fn raw_payload(&self) -> Payload {
-        Payload::new(&self.raw[1..])
+    pub fn raw_payload(&self) -> SizedPayload {
+        SizedPayload::try_from(&self.raw[1..]).unwrap()
+    }
+
+    /// Get the payload as u8 value
+    pub fn payload_u8(&self) -> Option<u8> {
+        u8::try_from(self.raw_payload()).ok()
+    }
+
+    /// Get the payload as u16 value
+    pub fn payload_u16(&self) -> Option<u16> {
+        u16::try_from(self.raw_payload()).ok()
     }
 
     /// Determine if current item describes the Usage Page
@@ -156,7 +183,7 @@ impl ReportDescriptorItem {
             return None;
         }
 
-        UsagePage::try_from(self.raw_payload()).ok()
+        Some(UsagePage::from(self.payload_u16()?))
     }
 
     /// Get the Usage given a UsagePage. This function will return None
@@ -167,7 +194,8 @@ impl ReportDescriptorItem {
             return None;
         }
 
-        Usage::try_from((usage_page, self.raw_payload())).ok()
+        let id = self.payload_u16()?;
+        Some(Usage::from((usage_page, id)))
     }
 
     /// Get the Collection type. If this item doesn't describe the Collection
@@ -177,7 +205,23 @@ impl ReportDescriptorItem {
             return None;
         }
 
-        Some(Collection::from(self.raw_payload().data()[0]))
+        Some(Collection::from(self.payload_u8()?))
+    }
+}
+
+impl<T: Into<ItemType>, U: Into<SizedPayload>> From<(T, U)> for ReportDescriptorItem {
+    fn from(value: (T, U)) -> Self {
+        let kind: ItemType = value.0.into();
+        let payload: SizedPayload = value.1.into();
+
+        let size = payload.size();
+        let prefix = PrefixByte::from((&kind, &size));
+
+        ReportDescriptorItem {
+            kind,
+            payload_size: size,
+            raw: prefix.into_vec_append(payload.to_vec()),
+        }
     }
 }
 
@@ -198,44 +242,20 @@ impl ReportDescriptorItemList {
         &self.items
     }
 
-    /// Find the first item that describes the Usage Page
-    pub fn find_first_usage_page_item(&self) -> Option<&ReportDescriptorItem> {
-        self.items.iter().find(|&item| item.is_usage_page())
-    }
-
-    /// Find the first item that describes the Usage
-    pub fn find_first_usage_item(&self) -> Option<&ReportDescriptorItem> {
-        self.items.iter().find(|&item| item.is_usage())
-    }
-
-    /// Find the first item that describes the Logical Minimum
-    pub fn find_first_logical_minimum_item(&self) -> Option<&ReportDescriptorItem> {
-        self.items.iter().find(|&item| item.is_logical_minimum())
-    }
-
-    /// Find the first item that describes the Logical Maximum
-    pub fn find_first_logical_maximum_item(&self) -> Option<&ReportDescriptorItem> {
-        self.items.iter().find(|&item| item.is_logical_maximum())
-    }
-
-    /// Find the first item that describes the Report Size
-    pub fn find_first_report_size_item(&self) -> Option<&ReportDescriptorItem> {
-        self.items.iter().find(|&item| item.is_report_size())
-    }
-
-    /// Find the first item that describes the Report Count
-    pub fn find_first_report_count_item(&self) -> Option<&ReportDescriptorItem> {
-        self.items.iter().find(|&item| item.is_report_count())
-    }
-
-    /// Find the first item of a type
-    pub fn find_first(&self, key: ItemType) -> Option<&ReportDescriptorItem> {
-        self.items.iter().find(|&item| item.kind == key)
-    }
-
-    /// Filter the item
+    /// Filter the items
     pub fn filter_by_type(&self, key: ItemType) -> Vec<&ReportDescriptorItem> {
         self.items.iter().filter(|&item| item.kind == key).collect()
+    }
+
+    /// Return all raw bytes
+    pub fn bytes(self) -> Vec<u8> {
+        let mut bytes = Vec::new();
+
+        for mut item in self.items {
+            bytes.append(&mut item.raw);
+        }
+
+        bytes
     }
 }
 

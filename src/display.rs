@@ -2,7 +2,7 @@ use crate::hid::{
     Collection, GlobalType, ItemType, LocalType, MainType, ReportDescriptorItem,
     ReportDescriptorItemList,
 };
-use crate::payload::{Payload, Size};
+use crate::data::{Size, SizedPayload};
 use crate::usage_table::fido::FIDOAllianceUsage;
 use crate::usage_table::generic_desktop::GenericDesktopControlsUsage;
 use crate::usage_table::keyboard::KeyboardUsage;
@@ -114,7 +114,7 @@ impl fmt::Display for UsagePage {
             UsagePage::GamingDevice => f.write_str("Gaming Device"),
             UsagePage::FIDOAlliance => f.write_str("FIDO Alliance"),
             UsagePage::VendorDefined(i) => write!(f, "Vendor Defined (0x{:02x})", i),
-            UsagePage::Reserved => f.write_str("Reserved"),
+            UsagePage::Reserved(i) => write!(f, "Reserved (0x{:02x})", i),
         }
     }
 }
@@ -158,11 +158,14 @@ impl fmt::Display for ReportDescriptorItem {
 
 /// Implement Display for Payload
 ///
-/// Will display the output as u32
-impl<'a> fmt::Display for Payload<'a> {
+/// Will display the output as i32
+impl fmt::Display for SizedPayload {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let u32 = u32::try_from(self.clone()).unwrap_or(u32::MAX);
-        write!(f, "{}", u32)
+        if self.size() != Size::Empty {
+            write!(f, "{}", i32::from(self.clone()))?;
+        }
+
+        Ok(())
     }
 }
 
@@ -203,7 +206,8 @@ impl fmt::Display for ReportDescriptorItemList {
 
             // Display item
             if item.is_usage() || item.is_usage_minimum() || item.is_usage_maximum() {
-                let usage = Usage::try_from((&usage_page, item.raw_payload())).unwrap_or_default();
+                let usage = Usage::try_from((&usage_page, item.payload_u16().unwrap_or(0)))
+                    .unwrap_or_default();
                 writeln!(f, "{} ({})", item.kind, usage)?;
             } else {
                 writeln!(f, "{}", item)?;
@@ -652,7 +656,7 @@ impl fmt::Display for FIDOAllianceUsage {
 mod tests {
     use super::*;
     use crate::parse::report_descriptor;
-    use crate::payload::Size;
+    use crate::data::Size;
 
     #[test]
     fn usage_page_item() {
@@ -666,9 +670,9 @@ mod tests {
     }
 
     #[test]
-    fn payload_as_u32_decimal() {
-        let bytes = [0x11];
-        let p = Payload::new(&bytes);
+    fn payload_as_i32_decimal() {
+        let bytes: [u8; 1] = [0x11];
+        let p = SizedPayload::from(bytes);
         assert_eq!(format!("{}", p), "17");
     }
 

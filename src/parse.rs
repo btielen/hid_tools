@@ -2,7 +2,7 @@ use crate::error::Error;
 use crate::hid::{
     GlobalType, ItemType, LocalType, MainType, ReportDescriptorItem, ReportDescriptorItemList,
 };
-use crate::payload::Size;
+use crate::data::Size;
 use nom::bytes::complete::take;
 use nom::combinator::{all_consuming, map, map_res};
 use nom::error::{
@@ -57,7 +57,7 @@ where
             0b10000100 => Ok(ItemType::Global(GlobalType::ReportID)),
             0b10010100 => Ok(ItemType::Global(GlobalType::ReportCount)),
             0b10100100 => Ok(ItemType::Global(GlobalType::Push)),
-            0b10110100 => Ok(ItemType::Global(GlobalType::Push)),
+            0b10110100 => Ok(ItemType::Global(GlobalType::Pop)),
 
             // Local hid items
             // https://www.usb.org/sites/default/files/hid1_11.pdf - page 39

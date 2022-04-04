@@ -6,7 +6,12 @@ pub mod fido;
 pub mod generic_desktop;
 pub mod keyboard;
 
+pub trait UsageId {
+    fn usage_id(self) -> u16;
+}
+
 // https://usb.org/sites/default/files/hut1_3_0.pdf - page 17
+#[derive(Debug, PartialEq, Clone)]
 pub enum UsagePage {
     Undefined,
     GenericDesktopControls,
@@ -44,9 +49,10 @@ pub enum UsagePage {
     GamingDevice,
     FIDOAlliance,
     VendorDefined(u16),
-    Reserved,
+    Reserved(u16),
 }
 
+#[derive(Clone)]
 pub enum Usage {
     Undefined,
     GenericDesktopControls(GenericDesktopControlsUsage),
@@ -106,43 +112,124 @@ impl From<u16> for UsagePage {
             0x0E => UsagePage::Haptics,
             0x0F => UsagePage::PhysicalInputDevice,
             0x10 => UsagePage::Unicode,
-            0x11 => UsagePage::Reserved,
+            0x11 => UsagePage::Reserved(0x11),
             0x12 => UsagePage::EyeAndHeadTracker,
-            0x13 => UsagePage::Reserved,
+            0x13 => UsagePage::Reserved(0x13),
             0x14 => UsagePage::AuxiliaryDisplay,
-            0x15..=0x1F => UsagePage::Reserved,
+            i if (0x15..=0x1F).contains(&i) => UsagePage::Reserved(i),
             0x20 => UsagePage::Sensor,
-            0x21..=0x3F => UsagePage::Reserved,
+            i if (0x21..=0x3F).contains(&i) => UsagePage::Reserved(i),
             0x40 => UsagePage::MedicalInstruments,
             0x41 => UsagePage::BrailleDisplay,
-            0x42..=0x58 => UsagePage::Reserved,
+            i if (0x42..=0x58).contains(&i) => UsagePage::Reserved(i),
             0x59 => UsagePage::LightningAndIllumination,
-            0x5A..=0x7F => UsagePage::Reserved,
+            i if (0x5A..=0x7F).contains(&i) => UsagePage::Reserved(i),
             0x80 => UsagePage::Monitor,
             0x81 => UsagePage::MonitorEnumerated,
             0x82 => UsagePage::VESAVirtualControls,
-            0x83 => UsagePage::Reserved,
+            0x83 => UsagePage::Reserved(0x83),
             0x84 => UsagePage::Power,
             0x85 => UsagePage::BatterySystem,
-            0x86..=0x8B => UsagePage::Reserved,
+            i if (0x86..=0x8B).contains(&i) => UsagePage::Reserved(i),
             0x8C => UsagePage::BarcodeScanner,
             0x8D => UsagePage::Scale,
             0x8E => UsagePage::MagneticStripeReader,
-            0x8F => UsagePage::Reserved,
+            0x8F => UsagePage::Reserved(0x8F),
             0x90 => UsagePage::CameraControl,
             0x91 => UsagePage::Arcade,
             0x92 => UsagePage::GamingDevice,
-            0x93..=0xF1CF => UsagePage::Reserved,
+            i if (0x93..=0xF1CF).contains(&i) => UsagePage::Reserved(i),
             0xF1D0 => UsagePage::FIDOAlliance,
-            0xF1D1..=0xFEFF => UsagePage::Reserved,
+            i if (0xF1D1..=0xFEFF).contains(&i) => UsagePage::Reserved(i),
             i => UsagePage::VendorDefined(i),
         }
     }
 }
 
-impl Default for UsagePage {
-    fn default() -> Self {
-        UsagePage::Undefined
+impl From<UsagePage> for u16 {
+    fn from(value: UsagePage) -> Self {
+        match value {
+            UsagePage::Undefined => 0x00,
+            UsagePage::GenericDesktopControls => 0x01,
+            UsagePage::SimulationControls => 0x02,
+            UsagePage::VRControls => 0x03,
+            UsagePage::SportControls => 0x04,
+            UsagePage::GameControls => 0x05,
+            UsagePage::GenericDeviceControls => 0x06,
+            UsagePage::Keyboard => 0x07,
+            UsagePage::LED => 0x08,
+            UsagePage::Button => 0x09,
+            UsagePage::Ordinal => 0x0A,
+            UsagePage::Telephony => 0x0B,
+            UsagePage::Consumer => 0x0C,
+            UsagePage::Digitizer => 0x0D,
+            UsagePage::Haptics => 0x0E,
+            UsagePage::PhysicalInputDevice => 0x0F,
+            UsagePage::Unicode => 0x10,
+            UsagePage::EyeAndHeadTracker => 0x12,
+            UsagePage::AuxiliaryDisplay => 0x14,
+            UsagePage::Sensor => 0x20,
+            UsagePage::MedicalInstruments => 0x40,
+            UsagePage::BrailleDisplay => 0x41,
+            UsagePage::LightningAndIllumination => 0x59,
+            UsagePage::Monitor => 0x80,
+            UsagePage::MonitorEnumerated => 0x81,
+            UsagePage::VESAVirtualControls => 0x82,
+            UsagePage::Power => 0x84,
+            UsagePage::BatterySystem => 0x85,
+            UsagePage::BarcodeScanner => 0x8C,
+            UsagePage::Scale => 0x8D,
+            UsagePage::MagneticStripeReader => 0x8E,
+            UsagePage::CameraControl => 0x90,
+            UsagePage::Arcade => 0x91,
+            UsagePage::GamingDevice => 0x92,
+            UsagePage::FIDOAlliance => 0xF1D0,
+            UsagePage::VendorDefined(i) => i,
+            UsagePage::Reserved(i) => i,
+        }
+    }
+}
+
+impl From<Usage> for u16 {
+    fn from(value: Usage) -> Self {
+        match value {
+            Usage::Undefined => 0x00,
+            Usage::GenericDesktopControls(i) => u16::from(i),
+            Usage::SimulationControls(i) => i,
+            Usage::VRControls(i) => i,
+            Usage::SportControls(i) => i,
+            Usage::GameControls(i) => i,
+            Usage::GenericDeviceControls(i) => i,
+            Usage::Keyboard(i) => u16::from(i),
+            Usage::LED(i) => i,
+            Usage::Button(i) => i,
+            Usage::Ordinal(i) => i,
+            Usage::Telephony(i) => i,
+            Usage::Consumer(i) => i,
+            Usage::Digitizer(i) => i,
+            Usage::Haptics(i) => i,
+            Usage::PhysicalInputDevice(i) => i,
+            Usage::Unicode(i) => i,
+            Usage::EyeAndHeadTracker(i) => i,
+            Usage::AuxiliaryDisplay(i) => i,
+            Usage::Sensor(i) => i,
+            Usage::MedicalInstruments(i) => i,
+            Usage::BrailleDisplay(i) => i,
+            Usage::LightningAndIllumination(i) => i,
+            Usage::Monitor(i) => i,
+            Usage::MonitorEnumerated(i) => i,
+            Usage::VESAVirtualControls(i) => i,
+            Usage::Power(i) => i,
+            Usage::BatterySystem(i) => i,
+            Usage::BarcodeScanner(i) => i,
+            Usage::Scale(i) => i,
+            Usage::MagneticStripeReader(i) => i,
+            Usage::CameraControl(i) => i,
+            Usage::Arcade(i) => i,
+            Usage::GamingDevice(i) => i,
+            Usage::FIDOAlliance(i) => u16::from(i),
+            Usage::VendorDefined(i) => i,
+        }
     }
 }
 
@@ -187,13 +274,25 @@ impl From<(&UsagePage, u16)> for Usage {
             UsagePage::GamingDevice => Usage::GamingDevice(key.1),
             UsagePage::FIDOAlliance => Usage::FIDOAlliance(FIDOAllianceUsage::from(key.1)),
             UsagePage::VendorDefined(_) => Usage::VendorDefined(key.1),
-            UsagePage::Reserved => Usage::VendorDefined(key.1), // incorrect, but should never happen
+            UsagePage::Reserved(_) => Usage::VendorDefined(key.1), // incorrect, but should never happen
         }
+    }
+}
+
+impl Default for UsagePage {
+    fn default() -> Self {
+        UsagePage::Undefined
     }
 }
 
 impl Default for Usage {
     fn default() -> Self {
         Usage::Undefined
+    }
+}
+
+impl UsageId for Usage {
+    fn usage_id(self) -> u16 {
+        self.into()
     }
 }
