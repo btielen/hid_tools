@@ -1,8 +1,8 @@
+use crate::data::SizedPayload;
 use crate::hid::{
     Collection, GlobalType, ItemType, LocalType, MainType, ReportDescriptorItem,
     ReportDescriptorItemList,
 };
-use crate::data::SizedPayload;
 use crate::usage_table::{UsageId, UsagePage};
 
 #[derive(Debug, PartialEq)]
@@ -274,8 +274,8 @@ impl From<Collection> for ItemType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hid::{GlobalType, ItemType, ReportDescriptorItem};
     use crate::data::Size;
+    use crate::hid::{GlobalType, ItemType, ReportDescriptorItem};
     use crate::usage_table::keyboard::KeyboardUsage;
     use crate::usage_table::{Usage, UsagePage};
 

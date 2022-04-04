@@ -1,5 +1,5 @@
-use crate::data::{Size, SizedPayload};
 use crate::data::PrefixByte;
+use crate::data::{Size, SizedPayload};
 use crate::usage_table::Usage;
 use crate::usage_table::UsagePage;
 

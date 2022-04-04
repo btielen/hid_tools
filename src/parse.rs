@@ -1,8 +1,8 @@
+use crate::data::Size;
 use crate::error::Error;
 use crate::hid::{
     GlobalType, ItemType, LocalType, MainType, ReportDescriptorItem, ReportDescriptorItemList,
 };
-use crate::data::Size;
 use nom::bytes::complete::take;
 use nom::combinator::{all_consuming, map, map_res};
 use nom::error::{

@@ -1,8 +1,8 @@
+use crate::data::{Size, SizedPayload};
 use crate::hid::{
     Collection, GlobalType, ItemType, LocalType, MainType, ReportDescriptorItem,
     ReportDescriptorItemList,
 };
-use crate::data::{Size, SizedPayload};
 use crate::usage_table::fido::FIDOAllianceUsage;
 use crate::usage_table::generic_desktop::GenericDesktopControlsUsage;
 use crate::usage_table::keyboard::KeyboardUsage;
@@ -655,8 +655,8 @@ impl fmt::Display for FIDOAllianceUsage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse::report_descriptor;
     use crate::data::Size;
+    use crate::parse::report_descriptor;
 
     #[test]
     fn usage_page_item() {
