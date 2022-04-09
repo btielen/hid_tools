@@ -13,6 +13,7 @@ impl SizedPayload {
         Size::from(self)
     }
 
+    /// Get data. Will return None if
     pub fn data(&self) -> Option<&[u8]> {
         match self {
             SizedPayload::Empty => None,
@@ -22,6 +23,7 @@ impl SizedPayload {
         }
     }
 
+    /// Convert payload to owned vector by consuming it's data
     pub fn to_vec(self) -> Vec<u8> {
         match self {
             SizedPayload::Empty => Vec::new(),
@@ -29,6 +31,11 @@ impl SizedPayload {
             SizedPayload::Two(p) => p.to_vec(),
             SizedPayload::Four(p) => p.to_vec(),
         }
+    }
+
+    /// Returns true if self is empty
+    pub fn is_empty(&self) -> bool {
+        self.data().is_none()
     }
 }
 

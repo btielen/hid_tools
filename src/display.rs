@@ -1,7 +1,8 @@
 use crate::data::{Size, SizedPayload};
 use crate::hid::{
-    Collection, GlobalType, ItemType, LocalType, MainType, ReportDescriptorItem,
-    ReportDescriptorItemList,
+    Collection, Data, DataFieldOptions, GlobalType, ItemType, Linear, LocalType, MainType,
+    Mutability, NullState, ReportDescriptorItem, ReportDescriptorItemList, State, Structure, Value,
+    Volatile, Wrap,
 };
 use crate::usage_table::fido::FIDOAllianceUsage;
 use crate::usage_table::generic_desktop::GenericDesktopControlsUsage;
@@ -54,6 +55,99 @@ impl fmt::Display for Collection {
             Collection::UsageModifier => write!(f, "Usage Modifier"),
             Collection::Reserved(i) => write!(f, "Reserved ({})", i),
             Collection::VendorDefined(i) => write!(f, "Vendor defined ({})", i),
+        }
+    }
+}
+
+impl fmt::Display for DataFieldOptions {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}, {}, {}",
+            self.mutability(),
+            self.structure(),
+            self.value()
+        )
+    }
+}
+
+impl fmt::Display for Mutability {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Mutability::Data => write!(f, "Data"),
+            Mutability::Constant => write!(f, "Const"),
+        }
+    }
+}
+
+impl fmt::Display for Structure {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Structure::Array => write!(f, "Arr"),
+            Structure::Variable => write!(f, "Var"),
+        }
+    }
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::Absolute => write!(f, "Abs"),
+            Value::Relative => write!(f, "Rel"),
+        }
+    }
+}
+
+impl fmt::Display for Wrap {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Wrap::NoWrap => write!(f, "No Wrap"),
+            Wrap::Wrap => write!(f, "Wrap"),
+        }
+    }
+}
+
+impl fmt::Display for Linear {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Linear::Linear => write!(f, "Linear"),
+            Linear::NonLinear => write!(f, "Non-linear"),
+        }
+    }
+}
+
+impl fmt::Display for State {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            State::Preferred => write!(f, "Preferred State"),
+            State::NoPreferred => write!(f, "No Preferred State"),
+        }
+    }
+}
+
+impl fmt::Display for NullState {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            NullState::NoNullPosition => write!(f, "No Null Position"),
+            NullState::NullState => write!(f, "Null State"),
+        }
+    }
+}
+
+impl fmt::Display for Volatile {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Volatile::NonVolatile => write!(f, "Non Volatile"),
+            Volatile::Volatile => write!(f, "Volatile"),
+        }
+    }
+}
+
+impl fmt::Display for Data {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Data::BitField => write!(f, "Bit Field"),
+            Data::BufferedBytes => write!(f, "Buffered Bytes"),
         }
     }
 }
@@ -144,7 +238,14 @@ impl fmt::Display for ReportDescriptorItem {
 
         if self.is_collection() {
             return match self.collection() {
-                Some(c) => write!(f, "{} ({})", self.kind, c),
+                Some(collection) => write!(f, "{} ({})", self.kind, collection),
+                None => write!(f, "{} (!!ERROR UNKNOWN!!)", self.kind),
+            };
+        }
+
+        if self.is_input_output_or_feature() {
+            return match self.data_field_options() {
+                Some(options) => write!(f, "{} ({})", self.kind, options),
                 None => write!(f, "{} (!!ERROR UNKNOWN!!)", self.kind),
             };
         }

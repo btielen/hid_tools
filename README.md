@@ -35,13 +35,13 @@ Following is an example output for a 2-factor authentication usb-stick.
 [26, ff, 00]            Logical Maximum (255) 
 [75, 08]                Report Size (8) 
 [95, 40]                Report Count (64) 
-[81, 02]                Input (2) 
+[81, 02]                Input (Data, Var, Abs) 
 [09, 21]                Usage (Output Report Data)
 [15, 00]                Logical Minimum (0) 
 [26, ff, 00]            Logical Maximum (255) 
 [75, 08]                Report Size (8) 
 [95, 40]                Report Count (64) 
-[91, 02]                Output (2) 
+[91, 02]                Output (Data, Var, Abs) 
 [c0]                End Collection (0) 
 ```
 
@@ -69,7 +69,6 @@ fn main() {
 
 ## Todo
 
-- Display Input, Output, Feature (eg `INPUT (Data,Var,Rel)`)
 - Documentation
 - Convert more Usage tables (help wanted)
 

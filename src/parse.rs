@@ -1,8 +1,11 @@
 use crate::data::Size;
 use crate::error::Error;
 use crate::hid::{
-    GlobalType, ItemType, LocalType, MainType, ReportDescriptorItem, ReportDescriptorItemList,
+    Data, DataFieldOptions, GlobalType, ItemType, Linear, LocalType, MainType, Mutability,
+    NullState, ReportDescriptorItem, ReportDescriptorItemList, State, Structure, Value, Volatile,
+    Wrap,
 };
+use nom::bits::complete::take as take_bits;
 use nom::bytes::complete::take;
 use nom::combinator::{all_consuming, map, map_res};
 use nom::error::{
@@ -196,6 +199,156 @@ fn user_friendly_error(error: VerboseError<&[u8]>) -> String {
     message.into_iter().collect()
 }
 
+/// Parse Mutability (Data/Constant) from bit input
+fn mutability(input: (&[u8], usize)) -> IResult<(&[u8], usize), Mutability> {
+    map(take_bits(1usize), |bit: u8| {
+        if bit == 0 {
+            Mutability::Data
+        } else {
+            Mutability::Constant
+        }
+    })(input)
+}
+
+/// Parse Structure (Array/Variable) from bit input
+fn structure(input: (&[u8], usize)) -> IResult<(&[u8], usize), Structure> {
+    map(take_bits(1usize), |bit: u8| {
+        if bit == 0 {
+            Structure::Array
+        } else {
+            Structure::Variable
+        }
+    })(input)
+}
+
+/// Parse Value (Absolute/Relative) from bit input
+fn value(input: (&[u8], usize)) -> IResult<(&[u8], usize), Value> {
+    map(take_bits(1usize), |bit: u8| {
+        if bit == 0 {
+            Value::Absolute
+        } else {
+            Value::Relative
+        }
+    })(input)
+}
+
+/// Parse Wrap (NoWrap/Wrap) from bit input
+fn wrap(input: (&[u8], usize)) -> IResult<(&[u8], usize), Wrap> {
+    map(take_bits(1usize), |bit: u8| {
+        if bit == 0 {
+            Wrap::NoWrap
+        } else {
+            Wrap::Wrap
+        }
+    })(input)
+}
+
+/// Parse Linear (Linear/NonLinear) from bit input
+fn linear(input: (&[u8], usize)) -> IResult<(&[u8], usize), Linear> {
+    map(take_bits(1usize), |bit: u8| {
+        if bit == 0 {
+            Linear::Linear
+        } else {
+            Linear::NonLinear
+        }
+    })(input)
+}
+
+/// Parse State (Preferred/NoPreferred) from bit input
+fn state(input: (&[u8], usize)) -> IResult<(&[u8], usize), State> {
+    map(take_bits(1usize), |bit: u8| {
+        if bit == 0 {
+            State::Preferred
+        } else {
+            State::NoPreferred
+        }
+    })(input)
+}
+
+/// Parse NullState (NoNullPosition/NullState) from bit input
+fn null_state(input: (&[u8], usize)) -> IResult<(&[u8], usize), NullState> {
+    map(take_bits(1usize), |bit: u8| {
+        if bit == 0 {
+            NullState::NoNullPosition
+        } else {
+            NullState::NullState
+        }
+    })(input)
+}
+
+/// Parse Volatile (NonVolatile/Volatile) from bit input
+fn volatile(input: (&[u8], usize)) -> IResult<(&[u8], usize), Volatile> {
+    map(take_bits(1usize), |bit: u8| {
+        if bit == 0 {
+            Volatile::NonVolatile
+        } else {
+            Volatile::Volatile
+        }
+    })(input)
+}
+
+/// Parse Data (BitField/BufferedBytes) from bit input
+fn data(input: (&[u8], usize)) -> IResult<(&[u8], usize), Data> {
+    map(take_bits(1usize), |bit: u8| {
+        if bit == 0 {
+            Data::BitField
+        } else {
+            Data::BufferedBytes
+        }
+    })(input)
+}
+
+/// Parse DataFieldOptions from payload bytes
+fn data_field_options(
+    input: (&[u8], usize),
+    bytes_to_parse: Size,
+) -> IResult<(&[u8], usize), DataFieldOptions> {
+    let (input, data) = match bytes_to_parse {
+        Size::Four => {
+            let (input, _): ((&[u8], usize), u8) = take_bits(8 + 8 + 7usize)(input)?; // skip first 23 bits
+            data(input)?
+        }
+        Size::Two => {
+            let (input, _): ((&[u8], usize), u8) = take_bits(7usize)(input)?; // skip first 7 bits
+            data(input)?
+        }
+        _ => (input, Data::default()),
+    };
+
+    let (input, volatile) = volatile(input)?;
+    let (input, null_state) = null_state(input)?;
+    let (input, state) = state(input)?;
+    let (input, wrap) = wrap(input)?;
+    let (input, linear) = linear(input)?;
+    let (input, val) = value(input)?;
+    let (input, structure) = structure(input)?;
+    let (input, mutability) = mutability(input)?;
+
+    Ok((
+        input,
+        DataFieldOptions::from((
+            mutability, structure, val, wrap, linear, state, null_state, volatile, data,
+        )),
+    ))
+}
+
+/// Parse the payload data of Input, Output or Feature Items
+pub fn data_field_options_from_payload(
+    payload: &[u8],
+    bytes_to_parse: Size,
+) -> Result<DataFieldOptions, Error> {
+    if payload.is_empty() {
+        return Err(Error::PayloadEmpty);
+    }
+
+    data_field_options((payload, 0), bytes_to_parse)
+        .finish()
+        .map(|v| v.1)
+        .map_err(|_| {
+            Error::ParsingFailed("Could not parse payload to data field options".to_string())
+        })
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -290,5 +443,48 @@ mod tests {
             result,
             ParsingFailed("Eof:\t[255, 9, 1]\nFor input [0006, 00d0, 00f1, 00ff, 0009, 0001] could not parse all bytes to report descriptor \n\n".to_string())
         )
+    }
+
+    #[test]
+    fn data_field_options_1() {
+        let bytes: Vec<u8> = vec![0b0000_0001];
+        let result = data_field_options((&bytes, 0), Size::One);
+        assert_eq!(
+            result,
+            Ok((
+                (&bytes[1..], 0),
+                DataFieldOptions::from((
+                    Mutability::Constant,
+                    Structure::Array,
+                    Value::Absolute,
+                    Wrap::NoWrap,
+                    Linear::Linear,
+                    State::Preferred,
+                    NullState::NoNullPosition,
+                    Volatile::NonVolatile,
+                    Data::BitField
+                ))
+            ))
+        );
+    }
+
+    #[test]
+    fn data_field_options_2() {
+        let bytes: Vec<u8> = vec![0b1111_1111];
+        let result = data_field_options_from_payload(&bytes, Size::One);
+        assert_eq!(
+            result,
+            Ok(DataFieldOptions::from((
+                Mutability::Constant,
+                Structure::Variable,
+                Value::Relative,
+                Wrap::Wrap,
+                Linear::NonLinear,
+                State::NoPreferred,
+                NullState::NullState,
+                Volatile::Volatile,
+                Data::BitField
+            )))
+        );
     }
 }
