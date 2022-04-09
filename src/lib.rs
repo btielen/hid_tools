@@ -7,3 +7,4 @@ pub mod linux;
 pub mod parse;
 pub mod report_builder;
 pub mod usage_table;
+mod report;
