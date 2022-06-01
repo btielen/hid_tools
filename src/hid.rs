@@ -35,10 +35,6 @@ pub enum LocalType {
     Delimiter,
 }
 
-/// Global items describe rather than define data from a control. A new Main item
-/// assumes the characteristics of the item state table. Global items can change the
-/// state table. As a result Global item tags apply to all subsequently defined items
-/// unless overridden by another Global item.
 #[derive(Debug, PartialEq, Clone)]
 pub enum GlobalType {
     UsagePage,
@@ -378,7 +374,7 @@ impl From<Collection> for u8 {
 
 /// Represents one item in the Report Descriptor. This is a variable-sized
 /// element with one header byte and 0, 1, 2, 4 payload bytes.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ReportDescriptorItem {
     pub(crate) kind: ItemType,
     pub(crate) payload_size: Size,
@@ -399,6 +395,16 @@ impl ReportDescriptorItem {
     /// Get the payload as u16 value
     pub fn payload_u16(&self) -> Option<u16> {
         u16::try_from(self.raw_payload()).ok()
+    }
+
+    /// Get the payload as u32 value
+    pub fn payload_u32(&self) -> u32 {
+        u32::from(self.raw_payload())
+    }
+
+    /// Get the payload as i32 value
+    pub fn payload_i32(&self) -> i32 {
+        i32::from(self.raw_payload())
     }
 
     /// Determine if current item describes the Usage Page
@@ -439,6 +445,11 @@ impl ReportDescriptorItem {
     /// Determine if current item describes the Report Count
     pub fn is_report_count(&self) -> bool {
         self.kind == ItemType::Global(GlobalType::ReportCount)
+    }
+
+    /// Determine if current item describes the Report ID
+    pub fn is_report_id(&self) -> bool {
+        self.kind == ItemType::Global(GlobalType::ReportID)
     }
 
     /// Determine if current item describes Input

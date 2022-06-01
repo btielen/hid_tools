@@ -1,6 +1,6 @@
 use crate::hid::{GlobalType, ItemType, LocalType, MainType};
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SizedPayload {
     Empty,
     One([u8; 1]),
@@ -181,6 +181,17 @@ impl From<SizedPayload> for i32 {
             SizedPayload::One(data) => i8::from_le_bytes(data).into(),
             SizedPayload::Two(data) => i16::from_le_bytes(data).into(),
             SizedPayload::Four(data) => i32::from_le_bytes(data),
+        }
+    }
+}
+
+impl From<SizedPayload> for u32 {
+    fn from(value: SizedPayload) -> Self {
+        match value {
+            SizedPayload::Empty => 0,
+            SizedPayload::One(data) => u8::from_le_bytes(data).into(),
+            SizedPayload::Two(data) => u16::from_le_bytes(data).into(),
+            SizedPayload::Four(data) => u32::from_le_bytes(data),
         }
     }
 }

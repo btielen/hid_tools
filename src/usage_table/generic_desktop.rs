@@ -1,7 +1,7 @@
 use crate::usage_table::UsageId;
 
 // https://usb.org/sites/default/files/hut1_3_0.pdf - page 32
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum GenericDesktopControlsUsage {
     Undefined,
     Pointer,

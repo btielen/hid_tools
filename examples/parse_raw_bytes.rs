@@ -1,5 +1,4 @@
 use hid_tools::parse;
-use nom::Finish;
 
 fn main() {
     let bytes = [

@@ -52,7 +52,7 @@ pub enum UsagePage {
     Reserved(u16),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Usage {
     Undefined,
     GenericDesktopControls(GenericDesktopControlsUsage),

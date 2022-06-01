@@ -45,7 +45,10 @@ Following is an example output for a 2-factor authentication usb-stick.
 [c0]                End Collection (0) 
 ```
 
-### Build a raw HID Descriptor Report
+## Report Descriptor
+
+The HID Report Descriptor is a hard coded array of bytes that describe the device's data packets. This
+package provides a builder to create a Report Descriptor.
 
 ```rust
 use hid_tools::report_builder::ReportDescriptorBuilder;
@@ -66,6 +69,51 @@ fn main() {
     println!("{:02x?}", raw_report)
 }
 ```
+
+## Report
+
+With the parsed or built Report Descriptor we know which data Reports to expect. With
+this we can parse a Report.
+
+```rust
+use hid_tools::parse::report_descriptor;
+use hid_tools::report::{expected_input_reports, parse_raw_input_report};
+
+fn main() {
+    let keyboard_report_descriptor_bytes: Vec<u8> = vec![0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x05, 0x08, 0x19, 0x01,0x29, 0x03, 0x15, 0x00, 0x25,
+                                                         0x01, 0x75, 0x01, 0x95, 0x03,0x91, 0x02, 0x95, 0x05, 0x91, 0x01, 0x05, 0x07, 0x19, 0xe0,0x29,
+                                                         0xe7, 0x95, 0x08, 0x81, 0x02, 0x75, 0x08, 0x95, 0x01,0x81, 0x01, 0x19, 0x00, 0x29, 0x91,
+                                                         0x26, 0xff, 0x00, 0x95, 0x06, 0x81, 0x00, 0xc0];
+
+    let event_report: Vec<u8> = vec![0x02, 0, 0x04, 0x05, 0, 0, 0, 0]; // Left shift, a and b pressed on keyboard
+
+    let report_descriptor = report_descriptor(&keyboard_report_descriptor_bytes).unwrap();
+    let expected_reports = expected_input_reports(&report_descriptor).unwrap();
+    let parsed_report = parse_raw_input_report(&event_report, &expected_reports).unwrap();
+
+    println!("Event: {:?} \n\n{}", event_report, parsed_report);
+}
+```
+
+will print
+
+```
+Event: [2, 0, 4, 5, 0, 0, 0, 0] 
+
+Keyboard - Keyboard Left Control(0)
+Keyboard - Keyboard Left Shift(1)
+Keyboard - Keyboard Left Alt(0)
+Keyboard - Keyboard Left GUI(0)
+Keyboard - Keyboard Right Control(0)
+Keyboard - Keyboard Right Shift(0)
+Keyboard - Keyboard Right Alt(0)
+Keyboard - Keyboard Right GUI(0)
+Constant(0)
+Keyboard - Keyboard a and A
+Keyboard - Keyboard b and B
+```
+
+See also the `parse_raw_report_keyboard` example.
 
 ## Todo
 

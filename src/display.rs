@@ -4,6 +4,7 @@ use crate::hid::{
     Mutability, NullState, ReportDescriptorItem, ReportDescriptorItemList, State, Structure, Value,
     Volatile, Wrap,
 };
+use crate::report::parsed::{ArrayValueItem, Field, ParsedReport, VarItem};
 use crate::usage_table::fido::FIDOAllianceUsage;
 use crate::usage_table::generic_desktop::GenericDesktopControlsUsage;
 use crate::usage_table::keyboard::KeyboardUsage;
@@ -750,6 +751,40 @@ impl fmt::Display for FIDOAllianceUsage {
             FIDOAllianceUsage::OutputReportData => f.write_str("Output Report Data"),
             FIDOAllianceUsage::Reserved(i) => write!(f, "Reserved ({})", i),
         }
+    }
+}
+
+impl fmt::Display for ParsedReport {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        for field in &self.fields {
+            writeln!(f, "{}", field)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl fmt::Display for Field {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Field::ReportId(id) => write!(f, "ReportId({})", id),
+            Field::Constant(c) => write!(f, "Constant({})", c),
+            Field::Variable(item) => write!(f, "{}", item),
+            Field::ArrayValue(item) => {write!(f, "{}", item)},
+            Field::ArrayZeroValue(_) => { write!(f, "") }
+        }
+    }
+}
+
+impl fmt::Display for VarItem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{} - {}({})", self.usage_page, self.usage, self.value)
+    }
+}
+
+impl fmt::Display for ArrayValueItem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{} - {}", self.usage_page, self.usage)
     }
 }
 
