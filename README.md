@@ -117,7 +117,7 @@ See also the `parse_raw_report_keyboard` example.
 
 ## Todo
 
-- Documentation
+- Logical minimum/maximum
 - Convert more Usage tables (help wanted)
 
 

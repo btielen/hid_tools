@@ -1,5 +1,5 @@
-use hid_tools::parse::report_descriptor;
 use hid_tools::report::{expected_input_reports, parse_raw_input_report};
+use hid_tools::report_descriptor::parse::report_descriptor;
 
 fn main() {
     let keyboard_report_descriptor_bytes: Vec<u8> = vec![

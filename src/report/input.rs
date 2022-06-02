@@ -1,6 +1,6 @@
 use super::InputError;
-use crate::hid::{GlobalType, Mutability, ReportDescriptorItem, Structure};
 use crate::report::expected::{ExpectedField, ExpectedFieldItem};
+use crate::report_descriptor::{GlobalType, Mutability, ReportDescriptorItem, Structure};
 use crate::usage_table::{Usage, UsagePage};
 
 #[derive(Debug, PartialEq, Clone)]
@@ -223,7 +223,10 @@ impl<'a> Default for LocalItemTracker<'a> {
     }
 }
 
-pub fn expected_fields(input: Input, index_in_raw: usize) -> Result<Vec<ExpectedField>, InputError> {
+pub fn expected_fields(
+    input: Input,
+    index_in_raw: usize,
+) -> Result<Vec<ExpectedField>, InputError> {
     let default_usage_page = UsagePage::default();
     let usage_page = input
         .global_items
@@ -246,7 +249,7 @@ pub fn expected_fields(input: Input, index_in_raw: usize) -> Result<Vec<Expected
         .ok_or(InputError::GlobalItemNotSet(GlobalType::ReportCount))?;
 
     let mut expected_fields: Vec<ExpectedFieldItem> = Vec::new();
-// Create a bunch of ExpectedFieldItems
+    // Create a bunch of ExpectedFieldItems
     for i in 0..report_count as usize {
         let usage_page = usage_page.clone();
         let options = options.clone();
@@ -284,8 +287,7 @@ pub fn expected_fields(input: Input, index_in_raw: usize) -> Result<Vec<Expected
         expected_fields.push(item);
     }
 
-    let expected_fields: Vec<ExpectedField> = match (options.mutability(), options.structure())
-    {
+    let expected_fields: Vec<ExpectedField> = match (options.mutability(), options.structure()) {
         (Mutability::Data, Structure::Array) => expected_fields
             .into_iter()
             .map(ExpectedField::ArrayItem)
@@ -306,8 +308,9 @@ pub fn expected_fields(input: Input, index_in_raw: usize) -> Result<Vec<Expected
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::Size;
     use crate::hid::*;
+    use crate::report_descriptor::data::Size;
+    use crate::report_descriptor::{ItemType, MainType};
 
     #[test]
     fn input_struct_from_input_descriptor_item_is_ok() {

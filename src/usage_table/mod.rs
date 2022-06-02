@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 use crate::usage_table::fido::FIDOAllianceUsage;
 use crate::usage_table::generic_desktop::GenericDesktopControlsUsage;
 use crate::usage_table::keyboard::KeyboardUsage;
@@ -10,7 +11,10 @@ pub trait UsageId {
     fn usage_id(self) -> u16;
 }
 
-// https://usb.org/sites/default/files/hut1_3_0.pdf - page 17
+/// UsagePage organizes all related Usage controls
+///
+/// For definition in the HID protocol see:
+/// <https://usb.org/sites/default/files/hut1_3_0.pdf> - page 17
 #[derive(Debug, PartialEq, Clone)]
 pub enum UsagePage {
     Undefined,

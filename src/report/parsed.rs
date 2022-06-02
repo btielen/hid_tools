@@ -1,23 +1,35 @@
-use crate::hid::DataFieldOptions;
 use crate::report::expected::ExpectedField;
 use crate::report::InputError;
+use crate::report_descriptor::DataFieldOptions;
 use crate::usage_table::{Usage, UsagePage};
 
+/// A parsed data report
 #[derive(Debug, PartialEq)]
 pub struct ParsedReport {
     pub(super) report_id: Option<u8>,
     pub(crate) fields: Vec<Field>,
 }
 
+/// A parsed data field
 #[derive(Debug, PartialEq)]
 pub enum Field {
+    /// The parsed report id
     ReportId(u8),
+
+    /// A constant read-only value
     Constant(i64),
+
+    /// A variable value
     Variable(VarItem),
+
+    /// An array value (non-zero)
     ArrayValue(ArrayValueItem),
-    ArrayZeroValue(ArrayZeroItem)
+
+    /// An array value that is zero
+    ArrayZeroValue(ArrayZeroItem),
 }
 
+/// A parsed variable value in a report
 #[derive(Debug, PartialEq)]
 pub struct VarItem {
     pub(crate) usage_page: UsagePage, // From Report Descriptor
@@ -26,6 +38,7 @@ pub struct VarItem {
     pub(super) options: DataFieldOptions,
 }
 
+/// A parsed array value in a report
 #[derive(Debug, PartialEq)]
 pub struct ArrayValueItem {
     pub(crate) usage_page: UsagePage,
@@ -33,6 +46,7 @@ pub struct ArrayValueItem {
     options: DataFieldOptions,
 }
 
+/// A parsed array value in a report that has a value of zero
 #[derive(Debug, PartialEq)]
 pub struct ArrayZeroItem {
     pub(crate) usage_page: UsagePage,
@@ -46,9 +60,15 @@ impl TryFrom<(&ExpectedField, i64)> for Field {
         let field = match (value.0, value.1) {
             (ExpectedField::ReportId(id), _) => Field::ReportId(*id),
             (ExpectedField::Constant(_), c) => Field::Constant(c),
-            (ExpectedField::Variable(_), val) => Field::Variable(VarItem::try_from((value.0, val))?),
-            (ExpectedField::ArrayItem(_), 0) => Field::ArrayZeroValue(ArrayZeroItem::try_from(value.0)?),
-            (ExpectedField::ArrayItem(_), _) => Field::ArrayValue(ArrayValueItem::try_from((value.0, value.1))?)
+            (ExpectedField::Variable(_), val) => {
+                Field::Variable(VarItem::try_from((value.0, val))?)
+            }
+            (ExpectedField::ArrayItem(_), 0) => {
+                Field::ArrayZeroValue(ArrayZeroItem::try_from(value.0)?)
+            }
+            (ExpectedField::ArrayItem(_), _) => {
+                Field::ArrayValue(ArrayValueItem::try_from((value.0, value.1))?)
+            }
         };
 
         Ok(field)
@@ -95,18 +115,14 @@ impl TryFrom<&ExpectedField> for ArrayZeroItem {
 
     fn try_from(value: &ExpectedField) -> Result<Self, Self::Error> {
         match value {
-            ExpectedField::ArrayItem(item) => {
-
-                Ok(ArrayZeroItem {
-                    usage_page: item.usage_page.clone(),
-                    options: item.options.clone(),
-                })
-            }
+            ExpectedField::ArrayItem(item) => Ok(ArrayZeroItem {
+                usage_page: item.usage_page.clone(),
+                options: item.options.clone(),
+            }),
             _ => Err(InputError::ArrayItemExpected),
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {

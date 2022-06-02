@@ -5,7 +5,7 @@ use std::io::Read;
 use std::os::unix::io::AsRawFd;
 use std::path::PathBuf;
 
-const HID_DEVICE_PATH: &str = "/dev/hidraw3";
+const HID_DEVICE_PATH: &str = "/dev/hidraw1";
 
 // https://github.com/torvalds/linux/blob/master/include/uapi/linux/hidraw.h
 ioctl_read!(hid_read_descr_size, b'H', 0x01, u32);
@@ -65,7 +65,7 @@ fn main() {
         device_info.vendor_id, device_info.product_id
     );
 
-    let parsed = hid_tools::parse::report_descriptor(report.data()).unwrap();
+    let parsed = hid_tools::report_descriptor::parse::report_descriptor(report.data()).unwrap();
     println!("{}", parsed);
 
     let expected_reports = expected_input_reports(&parsed).unwrap();

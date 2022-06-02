@@ -1,4 +1,4 @@
-use crate::hid::DataFieldOptions;
+use crate::report_descriptor::DataFieldOptions;
 use crate::usage_table::{Usage, UsagePage};
 
 /// From an HID Report Descriptor we can derive a list of expected reports. ExpectedReports

@@ -1,5 +1,5 @@
-use hid_tools::hid::Collection;
 use hid_tools::report_builder::ReportDescriptorBuilder;
+use hid_tools::report_descriptor::Collection;
 use hid_tools::usage_table::generic_desktop::GenericDesktopControlsUsage;
 use hid_tools::usage_table::UsagePage;
 

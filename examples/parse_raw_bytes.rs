@@ -1,4 +1,4 @@
-use hid_tools::parse;
+use hid_tools::report_descriptor::parse;
 
 fn main() {
     let bytes = [

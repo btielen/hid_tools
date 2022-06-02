@@ -1,32 +1,65 @@
 mod expected;
 mod input;
 mod parse;
+/// Parsed Report data
 pub mod parsed;
 
-use crate::hid::{GlobalType, ItemType, LocalType, MainType, ReportDescriptorItemList};
 use crate::report::expected::{ExpectedReport, ExpectedReports};
 use crate::report::input::{GlobalItemTracker, Input, LocalItemTracker};
 use crate::report::parse::{report_id, val};
 use crate::report::parsed::{Field, ParsedReport};
+use crate::report_descriptor::{
+    GlobalType, ItemType, LocalType, MainType, ReportDescriptor,
+};
+use thiserror::Error;
 
-#[derive(Debug, PartialEq)]
+/// Errors for working with an Report
+#[derive(Error, Debug, PartialEq)]
 pub enum InputError {
+    /// Input was empty
+    #[error("Input items is empty")]
     Empty,
+
+    /// Item type was not expected
+    #[error("Item type is invalid")]
     InvalidItemType,
-    InvalidDataFieldOptions,
+
+    /// Payload was not valid
+    #[error("Payload is invalid")]
     InvalidPayload,
+
+    /// A global item was expected but not set
+    #[error("Global item `{0}` not set")]
     GlobalItemNotSet(GlobalType),
+
+    /// A local item was expected but not set
+    #[error("Local item `{0}` not set")]
     LocalItemNotSet(LocalType),
+
+    /// Report ID was expected
+    #[error("Report ID expected")]
     ReportIdExpected,
+
+    /// Report ID was not found
+    #[error("Report ID not found in received reports")]
     UnknownReportId,
+
+    /// An array item was expected
+    #[error("An array item was expected")]
     ArrayItemExpected,
+
+    /// An variable item was expected
+    #[error("An variable item was expected")]
     VariableItemExpected,
+
+    /// Can not take bits from input
+    #[error("Can not take bits from input")]
     CannotTakeBits,
 }
 
 /// From the ReportDescriptorItem list we can create an list of expected Reports.
 pub fn expected_input_reports(
-    report_descriptor: &ReportDescriptorItemList,
+    report_descriptor: &ReportDescriptor,
 ) -> Result<ExpectedReports, InputError> {
     let mut global_items = GlobalItemTracker::default();
     let mut local_items = LocalItemTracker::default();
@@ -86,6 +119,7 @@ pub fn expected_input_reports(
     Ok(ExpectedReports::from((has_report_id, reports)))
 }
 
+/// Parse raw input report
 pub fn parse_raw_input_report(
     report: &[u8],
     expected_reports: &ExpectedReports,
@@ -129,6 +163,7 @@ mod tests {
     use crate::report::expected::{ExpectedField, ExpectedFieldItem};
     use crate::report::parsed::{Field, VarItem};
     use crate::report_builder::ReportDescriptorBuilder;
+    use crate::report_descriptor::{Collection, DataFieldOptions, Mutability, Structure, Value};
     use crate::usage_table::generic_desktop::GenericDesktopControlsUsage;
     use crate::usage_table::keyboard::KeyboardUsage;
     use crate::usage_table::{Usage, UsagePage};

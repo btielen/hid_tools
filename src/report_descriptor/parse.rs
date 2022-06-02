@@ -1,8 +1,8 @@
-use crate::data::Size;
 use crate::error::Error;
-use crate::hid::{
+use crate::report_descriptor::data::Size;
+use crate::report_descriptor::{
     Data, DataFieldOptions, GlobalType, ItemType, Linear, LocalType, MainType, Mutability,
-    NullState, ReportDescriptorItem, ReportDescriptorItemList, State, Structure, Value, Volatile,
+    NullState, ReportDescriptorItem, ReportDescriptor, State, Structure, Value, Volatile,
     Wrap,
 };
 use nom::bits::complete::take as take_bits;
@@ -137,20 +137,20 @@ where
 }
 
 /// Parse all bytes from input into a ReportDescriptorItemList
-fn full_report_descriptor<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], ReportDescriptorItemList, E>
+fn full_report_descriptor<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], ReportDescriptor, E>
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]> + FromExternalError<&'a [u8], MapResultError>,
 {
     context(
         "parse all bytes to report descriptor",
         map(all_consuming(many0(descriptor_item)), |items| {
-            ReportDescriptorItemList::new(items)
+            ReportDescriptor::new(items)
         }),
     )(input)
 }
 
 /// Parse all bytes as a vector of ReportDescriptorItem's
-pub fn report_descriptor(input: &[u8]) -> Result<ReportDescriptorItemList, Error> {
+pub fn report_descriptor(input: &[u8]) -> Result<ReportDescriptor, Error> {
     // Parse report descriptor or result in a VerboseError
     let result = full_report_descriptor::<VerboseError<&[u8]>>(input);
 
@@ -354,7 +354,7 @@ mod tests {
 
     use super::*;
     use crate::error::Error::ParsingFailed;
-    use crate::hid::GlobalType;
+    use crate::report_descriptor::GlobalType;
 
     type SimpleError<'a> = nom::error::Error<&'a [u8]>;
     type VerboseError<'a> = nom::error::VerboseError<&'a [u8]>;

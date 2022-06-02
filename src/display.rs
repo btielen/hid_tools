@@ -1,10 +1,10 @@
-use crate::data::{Size, SizedPayload};
-use crate::hid::{
+use crate::report::parsed::{ArrayValueItem, Field, ParsedReport, VarItem};
+use crate::report_descriptor::data::{Size, SizedPayload};
+use crate::report_descriptor::{
     Collection, Data, DataFieldOptions, GlobalType, ItemType, Linear, LocalType, MainType,
-    Mutability, NullState, ReportDescriptorItem, ReportDescriptorItemList, State, Structure, Value,
+    Mutability, NullState, ReportDescriptorItem, ReportDescriptor, State, Structure, Value,
     Volatile, Wrap,
 };
-use crate::report::parsed::{ArrayValueItem, Field, ParsedReport, VarItem};
 use crate::usage_table::fido::FIDOAllianceUsage;
 use crate::usage_table::generic_desktop::GenericDesktopControlsUsage;
 use crate::usage_table::keyboard::KeyboardUsage;
@@ -284,7 +284,7 @@ impl fmt::Display for SizedPayload {
 /// Report Size (1)
 /// Input (2)
 ///```
-impl fmt::Display for ReportDescriptorItemList {
+impl fmt::Display for ReportDescriptor {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut usage_page = UsagePage::default();
         let mut indentations: usize = 0;
@@ -770,8 +770,12 @@ impl fmt::Display for Field {
             Field::ReportId(id) => write!(f, "ReportId({})", id),
             Field::Constant(c) => write!(f, "Constant({})", c),
             Field::Variable(item) => write!(f, "{}", item),
-            Field::ArrayValue(item) => {write!(f, "{}", item)},
-            Field::ArrayZeroValue(_) => { write!(f, "") }
+            Field::ArrayValue(item) => {
+                write!(f, "{}", item)
+            }
+            Field::ArrayZeroValue(_) => {
+                write!(f, "")
+            }
         }
     }
 }
@@ -791,8 +795,8 @@ impl fmt::Display for ArrayValueItem {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::Size;
-    use crate::parse::report_descriptor;
+    use crate::report_descriptor::data::Size;
+    use crate::report_descriptor::parse::report_descriptor;
 
     #[test]
     fn usage_page_item() {
