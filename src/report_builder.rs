@@ -1,7 +1,6 @@
 use crate::report_descriptor::data::SizedPayload;
 use crate::report_descriptor::{
-    Collection, GlobalType, ItemType, LocalType, MainType, ReportDescriptorItem,
-    ReportDescriptor,
+    Collection, GlobalType, ItemType, LocalType, MainType, ReportDescriptor, ReportDescriptorItem,
 };
 use crate::usage_table::{UsageId, UsagePage};
 
@@ -11,11 +10,10 @@ use crate::usage_table::{UsageId, UsagePage};
 ///
 /// ```rust
 /// use hid_tools::report_builder::ReportDescriptorBuilder;
-/// use hid_tools::hid::Collection;
+/// use hid_tools::report_descriptor::Collection;
 /// use hid_tools::usage_table::{UsagePage};
 /// use hid_tools::usage_table::generic_desktop::GenericDesktopControlsUsage;
 ///
-/// fn main() {
 ///     let raw_report = ReportDescriptorBuilder::new()
 ///         .usage_page(UsagePage::GenericDesktopControls)
 ///         .usage(GenericDesktopControlsUsage::Mouse)
@@ -26,7 +24,6 @@ use crate::usage_table::{UsageId, UsagePage};
 ///         .bytes();
 ///
 ///     println!("{:02x?}", raw_report)
-/// }
 /// ```
 #[derive(Debug, PartialEq)]
 pub struct ReportDescriptorBuilder {

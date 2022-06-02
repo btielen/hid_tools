@@ -11,7 +11,6 @@ pub mod parse;
 /// HID Descriptor Report item type
 #[derive(Debug, PartialEq, Clone)]
 pub enum ItemType {
-
     /// Main item type
     Main(MainType),
 
@@ -829,7 +828,6 @@ impl ReportDescriptor {
 
 #[cfg(test)]
 mod tests {
-    use crate::hid::*;
     use crate::report_descriptor::Collection;
 
     #[test]

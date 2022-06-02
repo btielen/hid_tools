@@ -2,8 +2,7 @@ use crate::error::Error;
 use crate::report_descriptor::data::Size;
 use crate::report_descriptor::{
     Data, DataFieldOptions, GlobalType, ItemType, Linear, LocalType, MainType, Mutability,
-    NullState, ReportDescriptorItem, ReportDescriptor, State, Structure, Value, Volatile,
-    Wrap,
+    NullState, ReportDescriptor, ReportDescriptorItem, State, Structure, Value, Volatile, Wrap,
 };
 use nom::bits::complete::take as take_bits;
 use nom::bytes::complete::take;

@@ -8,9 +8,7 @@ use crate::report::expected::{ExpectedReport, ExpectedReports};
 use crate::report::input::{GlobalItemTracker, Input, LocalItemTracker};
 use crate::report::parse::{report_id, val};
 use crate::report::parsed::{Field, ParsedReport};
-use crate::report_descriptor::{
-    GlobalType, ItemType, LocalType, MainType, ReportDescriptor,
-};
+use crate::report_descriptor::{GlobalType, ItemType, LocalType, MainType, ReportDescriptor};
 use thiserror::Error;
 
 /// Errors for working with an Report
@@ -159,7 +157,6 @@ pub fn parse_raw_input_report(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hid::*;
     use crate::report::expected::{ExpectedField, ExpectedFieldItem};
     use crate::report::parsed::{Field, VarItem};
     use crate::report_builder::ReportDescriptorBuilder;
@@ -388,76 +385,6 @@ mod tests {
         assert_eq!(result.reports[0].fields[0], expected_first_field);
         assert_eq!(result.reports[0].fields[5], expected_last_field);
     }
-
-    // #[test]
-    // fn keyboard_expected_reports() {
-    //     // Report descriptor from a simple real world usb keyboard
-    //     // will report [0, 0, 4, 0, 0, 0, 0, 0] for pressed A
-    //     let report = ReportDescriptorBuilder::new()
-    //         .usage_page(GenericDesktopControls)
-    //         .usage(Keyboard)
-    //         .collection(Application)
-    //         .usage_page(LED)
-    //         .usage_minimum::<u16>(1)
-    //         .usage_maximum::<u16>(3)
-    //         .logical_minimum::<u16>(0)
-    //         .logical_maximum::<u16>(1)
-    //         .report_size(1)
-    //         .report_count(3)
-    //         .output(0x02)
-    //         .report_count(5)
-    //         .output(0x01)
-    //         .usage_page(UsagePage::Keyboard)
-    //         .usage_minimum::<u16>(0xe0)
-    //         .usage_maximum::<u16>(0xe7)
-    //         .report_count(8)
-    //         .input(0x02) // Data, Array
-    //         .report_size(8)
-    //         .report_count(1)
-    //         .input(0x01)
-    //         .usage_minimum::<u16>(0x00)
-    //         .usage_maximum::<u16>(0x91)
-    //         .logical_maximum(255)
-    //         .report_count(6)
-    //         .input(0x00)
-    //         .end_collection()
-    //         .build();
-    //
-    //     let result = expected_input_reports(&report);
-    //
-    //     // We expect one input report from this descriptor
-    //     // let expected = ExpectedReport {
-    //     //     report_id: None,
-    //     //     fields: vec![
-    //     //         ExpectedField::Variable(ExpectedFieldItem {
-    //     //             usage_page: UsagePage::Keyboard,
-    //     //             usage: Usage::Keyboard(KeyboardLeftControl),
-    //     //             index_in_raw: 7,
-    //     //             size_bits: 1,
-    //     //             options: Default::default()
-    //     //         }),
-    //     //         ExpectedField::Variable(ExpectedFieldItem {
-    //     //             usage_page: UsagePage::Keyboard,
-    //     //             usage: Usage::Keyboard(KeyboardLeftControl),
-    //     //             index_in_raw: 7,
-    //     //             size_bits: 1,
-    //     //             options: Default::default()
-    //     //         }),
-    //     //         // 6 more
-    //     //         ExpectedField::ArrayItem(ExpectedFieldItem {
-    //     //             usage_page: UsagePage::Keyboard,
-    //     //             usage: Usage::Undefined,
-    //     //             index_in_raw: 16,
-    //     //             size_bits: 8,
-    //     //             options: Default::default()
-    //     //         })
-    //     //     ]
-    //     // };
-    //     assert_eq!(result, Ok(ExpectedReports {
-    //         has_report_id: false,
-    //         reports: vec![]
-    //     }));
-    // }
 
     #[test]
     fn parse_simple_report() {

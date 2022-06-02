@@ -308,7 +308,6 @@ pub fn expected_fields(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hid::*;
     use crate::report_descriptor::data::Size;
     use crate::report_descriptor::{ItemType, MainType};
 
