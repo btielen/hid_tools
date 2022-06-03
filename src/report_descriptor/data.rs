@@ -1,19 +1,33 @@
-use crate::hid::{GlobalType, ItemType, LocalType, MainType};
+use crate::report_descriptor::{GlobalType, ItemType, LocalType, MainType};
 
-#[derive(Clone)]
+/// Payload data in the Report Descriptor
+///
+/// Payload can be short (zero, one, two or four bytes) or long (unimplemented)
+#[derive(Clone, Debug, PartialEq)]
 pub enum SizedPayload {
+    /// Zero sized payload
     Empty,
+
+    /// Payload size of one byte
     One([u8; 1]),
+
+    /// Payload size of two bytes
     Two([u8; 2]),
+
+    /// Payload size of four bytes
     Four([u8; 4]),
+    // Long(Vec<u8>)
 }
 
 impl SizedPayload {
+    /// Get the size of the payload
     pub fn size(&self) -> Size {
         Size::from(self)
     }
 
-    /// Get data. Will return None if
+    /// Get a reference to the payload data
+    ///
+    /// Will return None if if the payload is empty
     pub fn data(&self) -> Option<&[u8]> {
         match self {
             SizedPayload::Empty => None,
@@ -185,6 +199,17 @@ impl From<SizedPayload> for i32 {
     }
 }
 
+impl From<SizedPayload> for u32 {
+    fn from(value: SizedPayload) -> Self {
+        match value {
+            SizedPayload::Empty => 0,
+            SizedPayload::One(data) => u8::from_le_bytes(data).into(),
+            SizedPayload::Two(data) => u16::from_le_bytes(data).into(),
+            SizedPayload::Four(data) => u32::from_le_bytes(data),
+        }
+    }
+}
+
 impl Default for SizedPayload {
     fn default() -> Self {
         Self::Empty
@@ -192,12 +217,20 @@ impl Default for SizedPayload {
 }
 
 /// The payload of an HID Report Descriptor Item can only be 0, 1, 2 or 4 bytes.
+///
 /// Note: a raw size of 0x3 means payload size 4
 #[derive(Debug, PartialEq, Clone)]
 pub enum Size {
+    /// Zero bytes
     Empty,
+
+    /// One byte payload
     One,
+
+    /// Two bytes payload
     Two,
+
+    /// Four bytes payload
     Four,
     //Long(u8) unimplemented
 }
@@ -274,8 +307,9 @@ impl PartialEq<Size> for usize {
     }
 }
 
+/// PrefixByte is an indicator for the type of the Report Descriptor Item
 #[derive(Clone, PartialEq, Debug)]
-pub struct PrefixByte(u8);
+pub(crate) struct PrefixByte(u8);
 
 impl PrefixByte {
     /// Convert the prefix byte to an u8 by consuming it

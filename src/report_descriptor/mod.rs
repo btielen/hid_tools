@@ -1,64 +1,221 @@
-use crate::data::PrefixByte;
-use crate::data::{Size, SizedPayload};
-use crate::parse::data_field_options_from_payload;
-use crate::usage_table::Usage;
-use crate::usage_table::UsagePage;
+use crate::report_descriptor::data::*;
+use crate::usage_table::{Usage, UsagePage};
+use parse::data_field_options_from_payload;
+
+/// Parsed descriptor report data
+pub mod data;
+
+/// Parse descriptor report items
+pub mod parse;
 
 /// HID Descriptor Report item type
 #[derive(Debug, PartialEq, Clone)]
 pub enum ItemType {
+    /// Main item type
     Main(MainType),
+
+    /// Global item type
     Global(GlobalType),
+
+    /// Local item type
     Local(LocalType),
 }
 
+/// Main item types
 #[derive(Debug, PartialEq, Clone)]
 pub enum MainType {
+    /// Input item tag
+    ///
+    /// An Input item describes information about the data provided by one or more
+    /// physical controls. An application can use this information to interpret the data
+    /// provided by the device. All data fields defined in a single item share an
+    /// identical data format.
     Input,
+
+    /// Output item tag
+    ///
+    /// Refers to the data to one or more similar controls on a device
+    /// such as setting the position of a single axis or a group of levers (variable data).
+    /// Or, it can represent data to one or more LEDs (array data).
     Output,
+
+    /// Feature item tag
+    ///
+    /// Describes device input and output not intended for
+    /// consumption by the end user —for example, a software feature or Control
+    /// Panel toggle.
     Feature,
+
+    /// Collection item tag
+    ///
+    /// A meaningful grouping of Input, Output, and Feature
+    /// items—for example, mouse, keyboard, joystick, and pointer
     Collection,
+
+    /// End Collection item tag
+    ///
+    /// A terminating item used to specify the end of a
+    /// collection of items.
     EndCollection,
 }
 
+/// Local item
+///
+/// Local item tags define characteristics of controls. These items do not carry over to
+/// the next Main item. If a Main item defines more than one control, it may be
+/// preceded by several similar Local item tags.
 #[derive(Debug, PartialEq, Clone)]
 pub enum LocalType {
+    /// Usage
+    ///
+    /// Usage index for an item usage; represents a
+    /// suggested usage for the item or collection. In the
+    /// case where an item represents multiple controls, a
+    /// Usage tag may suggest a usage for every variable
+    /// or element in an array.
     Usage,
+
+    /// Usage minimum
+    ///
+    /// Defines the starting usage associated with an array or bitmap.
     UsageMinimum,
+
+    /// Usage maximum
+    ///
+    /// Defines the ending usage associated with an array
+    /// or bitmap.
     UsageMaximum,
+
+    /// Designator Index
+    ///
+    /// Determines the body part used for a control. Index
+    /// points to a designator in the Physical descriptor.
     DesignatorIndex,
+
+    /// Designator Minimum
+    ///
+    /// Defines the index of the starting designator
+    /// associated with an array or bitmap.
     DesignatorMinimum,
+
+    /// Designator Maximum
+    ///
+    /// Defines the index of the ending designator
+    /// associated with an array or bitmap.
     DesignatorMaximum,
+
+    /// String Index
+    ///
+    /// String index for a String descriptor; allows a string
+    /// to be associated with a particular item or control.
     StringIndex,
+
+    /// String Minimum
+    ///
+    /// Specifies the first string index when assigning a
+    /// group of sequential strings to controls in an array
+    /// or bitmap.
     StringMinimum,
+
+    /// String maximum
+    ///
+    /// Specifies the last string index when assigning a
+    /// group of sequential strings to controls in an array
+    /// or bitmap.
     StringMaximum,
+
+    /// Delimiter
+    ///
+    /// Defines the beginning or end of a set of local items
+    /// (1 = open set, 0 = close set).
     Delimiter,
 }
 
+/// Global item
+///
 /// Global items describe rather than define data from a control. A new Main item
 /// assumes the characteristics of the item state table. Global items can change the
 /// state table. As a result Global item tags apply to all subsequently defined items
-/// unless overridden by another Global item.
+/// unless overridden by another Global item
 #[derive(Debug, PartialEq, Clone)]
 pub enum GlobalType {
+    /// Usage Page
+    ///
+    /// Describes the Usage Page
     UsagePage,
+
+    /// Logical Minimum
+    ///
+    /// This is the minimum value that a variable or array item will
+    /// report. For example, a mouse reporting x
+    /// position values from 0 to 128 would have a
+    /// Logical Minimum of 0
     LogicalMinimum,
+
+    /// Logical Maximum
+    ///
+    /// This is the minimum value that a variable or array item will
+    /// report. For example, a mouse reporting x position values from 0 to 128 would have a
+    /// Logical Maximum of 128
     LogicalMaximum,
+
+    /// Physical Minimum
+    ///
+    /// Minimum value for the physical extent of a
+    /// variable item. This represents the Logical
+    /// Minimum with units applied to it.
     PhysicalMinimum,
+
+    /// Physical Maximum
+    ///
+    /// Maximum value for the physical extent of a
+    /// variable item
     PhysicalMaximum,
+
+    /// Unit Exponent
+    ///
+    /// Value of the unit exponent in base 10
     UnitExponent,
+
+    /// Unit
     Unit,
+
+    /// Report Size
+    ///
+    /// Unsigned integer specifying the size of the report fields in bits.
     ReportSize,
+
+    /// Report ID
+    ///
+    /// Unsigned value that specifies the Report ID. If a
+    /// Report ID tag is used anywhere in Report descriptor, all data reports
+    /// for the device are preceded by a single byte ID field. A
     ReportID,
+
+    /// Report Count
+    ///
+    /// Unsigned integer specifying the number of data fields for the item; determines how
+    /// many fields are included in the report for this particular item (and consequently
+    /// how many bits are added to the report).
     ReportCount,
+
+    /// Push
+    ///
+    /// Places a copy of the global item state table on the stack.
     Push,
+
+    /// Pop
+    ///
+    /// Replaces the item state table with the top structure from the stack.
     Pop,
 }
 
+/// Data field options for Input, Output and Feature Items
+///
 /// Input, Output, and Feature items are used to create data fields within a report. Here
 /// we define a struct to hold the available options.
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 28
-#[derive(Debug, PartialEq, Clone)]
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 28
+#[derive(Default, Debug, PartialEq, Clone)]
 pub struct DataFieldOptions(
     Mutability,
     Structure,
@@ -72,80 +229,79 @@ pub struct DataFieldOptions(
 );
 
 impl DataFieldOptions {
+    /// Returns true if Mutability is data
     pub fn is_data(&self) -> bool {
         self.0 == Mutability::Data
     }
 
+    /// Returns true if Mutability is constant
     pub fn is_constant(&self) -> bool {
         self.0 == Mutability::Constant
     }
 
+    /// Returns true if Structure is array
     pub fn is_array(&self) -> bool {
         self.1 == Structure::Array
     }
 
+    /// Returns true if Structure is variable
     pub fn is_var(&self) -> bool {
         self.1 == Structure::Variable
     }
 
+    /// Returns true is Value is absolute
     pub fn is_absolute(&self) -> bool {
         self.2 == Value::Absolute
     }
 
+    /// Returns true if Value is relative
     pub fn is_relative(&self) -> bool {
         self.2 == Value::Relative
     }
 
+    /// Get the Mutability
     pub fn mutability(&self) -> &Mutability {
         &self.0
     }
 
+    /// Get the structure
     pub fn structure(&self) -> &Structure {
         &self.1
     }
 
+    /// Get the value (absolute or relative)
     pub fn value(&self) -> &Value {
         &self.2
     }
 
+    /// Get the Wrap
     pub fn wrap(&self) -> &Wrap {
         &self.3
     }
 
+    /// Get the Linear
     pub fn linear(&self) -> &Linear {
         &self.4
     }
 
+    /// Get the State
     pub fn state(&self) -> &State {
         &self.5
     }
 
+    /// Get the NullState
     pub fn null_state(&self) -> &NullState {
         &self.6
     }
 
+    /// Get the Volatile
     pub fn volatile(&self) -> &Volatile {
         &self.7
     }
 
+    /// Get the Data enum
     pub fn data(&self) -> &Data {
         &self.8
-    }
-}
-
-impl Default for DataFieldOptions {
-    fn default() -> Self {
-        DataFieldOptions(
-            Mutability::default(),
-            Structure::default(),
-            Value::default(),
-            Wrap::default(),
-            Linear::default(),
-            State::default(),
-            NullState::default(),
-            Volatile::default(),
-            Data::default(),
-        )
     }
 }
 
@@ -197,11 +353,18 @@ impl From<(Mutability, Structure, Value)> for DataFieldOptions {
     }
 }
 
-/// Indicates whether the item is data or a constant value
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 30
+/// Mutability indicates whether the item is data or a constant value
+///
+/// For definition see <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 30
 #[derive(Debug, PartialEq, Clone)]
 pub enum Mutability {
+    /// Data indicates the item is defining report
+    /// fields that contain modifiable device data
     Data,
+
+    /// Indicates the item is a static read-only field in a
+    /// report and cannot be modified (written) by the
+    /// host.
     Constant,
 }
 
@@ -213,10 +376,18 @@ impl Default for Mutability {
 
 /// Indicates whether the item creates variable or array
 /// data fields in reports.
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 30
+///
+/// For definition in the HID protocol see
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 30
 #[derive(Debug, PartialEq, Clone)]
 pub enum Structure {
+    /// An array provides an alternate means for
+    /// describing the data returned from a group of
+    /// buttons.
     Array,
+
+    /// In variable fields, each field
+    /// represents data from a physical control.
     Variable,
 }
 
@@ -228,10 +399,15 @@ impl Default for Structure {
 
 /// Indicates whether the data is absolute (based on a fixed origin) or
 /// relative (indicating the change in value from the last report).
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 30
+///
+/// For definition in the HID protocol see
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 30
 #[derive(Debug, PartialEq, Clone)]
 pub enum Value {
+    /// Absolute value based on a fixed origin
     Absolute,
+
+    /// Relative to the value from the last report
     Relative,
 }
 
@@ -243,10 +419,15 @@ impl Default for Value {
 
 /// Indicates whether the data “rolls over” when
 /// reaching either the extreme high or low value.
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 31
+///
+/// For definition in the HID protocol see
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 31
 #[derive(Debug, PartialEq, Clone)]
 pub enum Wrap {
+    /// No wrapping of the value
     NoWrap,
+
+    /// Wrap the value
     Wrap,
 }
 
@@ -258,10 +439,15 @@ impl Default for Wrap {
 
 /// Indicates whether the raw data from the device has been processed in some way, and no longer
 /// represents a linear relationship between what is measured and the data that is reported.
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 31
+///
+/// For definition in the HID protocol see
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 31
 #[derive(Debug, PartialEq, Clone)]
 pub enum Linear {
+    /// Linear data
     Linear,
+
+    /// Non linear data
     NonLinear,
 }
 
@@ -273,10 +459,15 @@ impl Default for Linear {
 
 /// Indicates whether the control has a preferred state to which it will return
 /// when the user is not physically interacting with the control.
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 31
+///
+/// For definition in the HID protocol see
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 31
 #[derive(Debug, PartialEq, Clone)]
 pub enum State {
+    /// Control has a preferred state
     Preferred,
+
+    /// Control doesn't have a preferred state (push buttons for example)
     NoPreferred,
 }
 
@@ -288,10 +479,15 @@ impl Default for State {
 
 /// Indicates whether the control has a state in which it
 /// is not sending meaningful data.
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 31
+///
+/// For definition in the HID protocol see
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 31
 #[derive(Debug, PartialEq, Clone)]
 pub enum NullState {
+    /// Control doesn't have a null state
     NoNullPosition,
+
+    /// Control has a null state
     NullState,
 }
 
@@ -303,10 +499,15 @@ impl Default for NullState {
 
 /// Indicates whether the Feature or Output control's
 /// value should be changed by the host or not.
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 31
+///
+/// For definition in the HID protocol see
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 31
 #[derive(Debug, PartialEq, Clone)]
 pub enum Volatile {
+    /// Non volatile data
     NonVolatile,
+
+    /// Volatile output can change with or without host interaction.
     Volatile,
 }
 
@@ -317,10 +518,15 @@ impl Default for Volatile {
 }
 
 /// Indicates that the control emits a fixed-size stream of bytes.
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 31
+///
+/// For definition in the HID protocol see
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 31
 #[derive(Debug, PartialEq, Clone)]
 pub enum Data {
+    /// Fixed size data
     BitField,
+
+    /// Bytes
     BufferedBytes,
 }
 
@@ -330,17 +536,37 @@ impl Default for Data {
     }
 }
 
-/// https://www.usb.org/sites/default/files/hid1_11.pdf - page 28
+/// The collection main item
+///
+/// For definition in the HID protocol see
+/// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 28
 #[derive(Debug, PartialEq, Clone)]
 pub enum Collection {
+    /// Physical collection
     Physical,
+
+    /// Application collection (mouse or keyboard for example)
     Application,
+
+    /// Logical collection
     Logical,
+
+    /// Report collection
     Report,
+
+    /// Named array collection
     NamedArray,
+
+    /// Usage switch collection
     UsageSwitch,
+
+    /// Usage modifier collection
     UsageModifier,
+
+    /// Reserved for future use
     Reserved(u8),
+
+    /// A vendor defined collection
     VendorDefined(u8),
 }
 
@@ -376,9 +602,8 @@ impl From<Collection> for u8 {
     }
 }
 
-/// Represents one item in the Report Descriptor. This is a variable-sized
-/// element with one header byte and 0, 1, 2, 4 payload bytes.
-#[derive(Debug, PartialEq)]
+/// Represents one item in the Report Descriptor
+#[derive(Debug, PartialEq, Clone)]
 pub struct ReportDescriptorItem {
     pub(crate) kind: ItemType,
     pub(crate) payload_size: Size,
@@ -399,6 +624,16 @@ impl ReportDescriptorItem {
     /// Get the payload as u16 value
     pub fn payload_u16(&self) -> Option<u16> {
         u16::try_from(self.raw_payload()).ok()
+    }
+
+    /// Get the payload as u32 value
+    pub fn payload_u32(&self) -> u32 {
+        u32::from(self.raw_payload())
+    }
+
+    /// Get the payload as i32 value
+    pub fn payload_i32(&self) -> i32 {
+        i32::from(self.raw_payload())
     }
 
     /// Determine if current item describes the Usage Page
@@ -439,6 +674,11 @@ impl ReportDescriptorItem {
     /// Determine if current item describes the Report Count
     pub fn is_report_count(&self) -> bool {
         self.kind == ItemType::Global(GlobalType::ReportCount)
+    }
+
+    /// Determine if current item describes the Report ID
+    pub fn is_report_id(&self) -> bool {
+        self.kind == ItemType::Global(GlobalType::ReportID)
     }
 
     /// Determine if current item describes Input
@@ -536,16 +776,16 @@ impl<T: Into<ItemType>, U: Into<SizedPayload>> From<(T, U)> for ReportDescriptor
     }
 }
 
-/// A list of Report Descriptor Items
+/// HID Report Descriptor is a list of ReportDescriptorItem's
 #[derive(Debug, PartialEq)]
-pub struct ReportDescriptorItemList {
+pub struct ReportDescriptor {
     items: Vec<ReportDescriptorItem>,
 }
 
-impl ReportDescriptorItemList {
-    /// Create a new ReportDescriptorList
+impl ReportDescriptor {
+    /// Create a new ReportDescriptor
     pub fn new(items: Vec<ReportDescriptorItem>) -> Self {
-        ReportDescriptorItemList { items }
+        ReportDescriptor { items }
     }
 
     /// Get a list of all items
@@ -572,7 +812,7 @@ impl ReportDescriptorItemList {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::report_descriptor::Collection;
 
     #[test]
     fn collection_from_u8_reserved() {

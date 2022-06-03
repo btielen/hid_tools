@@ -1,11 +1,31 @@
-use crate::data::SizedPayload;
-use crate::hid::{
-    Collection, GlobalType, ItemType, LocalType, MainType, ReportDescriptorItem,
-    ReportDescriptorItemList,
+use crate::report_descriptor::data::SizedPayload;
+use crate::report_descriptor::{
+    Collection, GlobalType, ItemType, LocalType, MainType, ReportDescriptor, ReportDescriptorItem,
 };
 use crate::usage_table::{UsageId, UsagePage};
 
-#[derive(Debug, PartialEq)]
+/// A builder for a ReportDescriptor
+///
+/// # Example
+///
+/// ```rust
+/// use hid_tools::report_builder::ReportDescriptorBuilder;
+/// use hid_tools::report_descriptor::Collection;
+/// use hid_tools::usage_table::{UsagePage};
+/// use hid_tools::usage_table::generic_desktop::GenericDesktopControlsUsage;
+///
+///     let raw_report = ReportDescriptorBuilder::new()
+///         .usage_page(UsagePage::GenericDesktopControls)
+///         .usage(GenericDesktopControlsUsage::Mouse)
+///         .item(Collection::Application)
+///         // add more items here (see also examples)
+///         .end_collection()
+///         .build()
+///         .bytes();
+///
+///     println!("{:02x?}", raw_report)
+/// ```
+#[derive(Default, Debug, PartialEq)]
 pub struct ReportDescriptorBuilder {
     items: Vec<ReportDescriptorItem>,
 }
@@ -18,31 +38,31 @@ impl ReportDescriptorBuilder {
 
     /* MAIN ITEMS */
 
-    /// Add Input
+    /// Add Input item
     pub fn input<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Main(MainType::Input);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Output
+    /// Add Output item
     pub fn output<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Main(MainType::Output);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Feature
+    /// Add Feature item
     pub fn feature<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Main(MainType::Feature);
         self.item_with_payload(kind, value)
     }
 
-    /// Add a collection item type
+    /// Add a Collection item
     pub fn collection<T: Into<u8>>(self, collection: T) -> Self {
         let kind = ItemType::Main(MainType::Collection);
         self.item_with_payload(kind, SizedPayload::from(collection.into()))
     }
 
-    /// Add an end collection item type
+    /// Add an End Collection item
     pub fn end_collection(self) -> Self {
         let kind = ItemType::Main(MainType::EndCollection);
         self.item_with_payload(kind, SizedPayload::Empty)
@@ -50,72 +70,72 @@ impl ReportDescriptorBuilder {
 
     /* GLOBAL ITEMS */
 
-    /// Add Usage Page to report
+    /// Add Usage Page item
     pub fn usage_page<T: Into<u16>>(self, usage_page: T) -> Self {
         let kind = ItemType::Global(GlobalType::UsagePage);
         self.item_with_payload(kind, SizedPayload::from(usage_page.into()))
     }
 
-    /// Add Logical Minimum
+    /// Add Logical Minimum item
     pub fn logical_minimum<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::LogicalMinimum);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Logical Maximum
+    /// Add Logical Maximum item
     pub fn logical_maximum<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::LogicalMaximum);
         self.item_with_payload(kind, value)
     }
-    /// Add Physical Minimum
+    /// Add Physical Minimum item
     pub fn physical_minimum<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::PhysicalMinimum);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Physical Maximum
+    /// Add Physical Maximum item
     pub fn physical_maximum<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::PhysicalMaximum);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Unit Exponent
+    /// Add Unit Exponent item
     pub fn unit_exponent<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::UnitExponent);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Unit
+    /// Add Unit item
     pub fn unit<T: Into<u8>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::Unit);
         self.item_with_payload(kind, value.into())
     }
 
-    /// Add Report Size
+    /// Add Report Size item
     pub fn report_size<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::ReportSize);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Report ID
+    /// Add Report ID item
     pub fn report_id<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::ReportID);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Report Count
+    /// Add Report Count item
     pub fn report_count<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::ReportCount);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Push
+    /// Add Push item
     pub fn push<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::Push);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Pop
+    /// Add Pop item
     pub fn pop<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Global(GlobalType::Pop);
         self.item_with_payload(kind, value)
@@ -123,61 +143,61 @@ impl ReportDescriptorBuilder {
 
     /* LOCAL ITEMS */
 
-    /// Add an Usage to the report
+    /// Add an Usage item
     pub fn usage<T: Into<u16>>(self, usage: T) -> Self {
         let kind = ItemType::Local(LocalType::Usage);
         self.item_with_payload(kind, SizedPayload::from(usage.into()))
     }
 
-    /// Add an Usage Minimum to the report
+    /// Add an Usage Minimum item
     pub fn usage_minimum<T: Into<u16>>(self, usage: T) -> Self {
         let kind = ItemType::Local(LocalType::UsageMinimum);
         self.item_with_payload(kind, SizedPayload::from(usage.into()))
     }
 
-    /// Add an Usage Maximum to the report
+    /// Add an Usage Maximum item
     pub fn usage_maximum<T: Into<u16>>(self, usage: T) -> Self {
         let kind = ItemType::Local(LocalType::UsageMaximum);
         self.item_with_payload(kind, SizedPayload::from(usage.into()))
     }
 
-    /// Add Designator Index
+    /// Add Designator Index item
     pub fn designator_index<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Local(LocalType::DesignatorIndex);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Designator Minimum
+    /// Add Designator Minimum item
     pub fn designator_minimum<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Local(LocalType::DesignatorMinimum);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Designator Maximum
+    /// Add Designator Maximum item
     pub fn designator_maximum<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Local(LocalType::DesignatorMaximum);
         self.item_with_payload(kind, value)
     }
 
-    /// Add String Index
+    /// Add String Index item
     pub fn string_index<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Local(LocalType::StringIndex);
         self.item_with_payload(kind, value)
     }
 
-    /// Add String Minimum
+    /// Add String Minimum item
     pub fn string_minimum<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Local(LocalType::StringMinimum);
         self.item_with_payload(kind, value)
     }
 
-    /// Add String Maximum
+    /// Add String Maximum item
     pub fn string_maximum<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Local(LocalType::StringMaximum);
         self.item_with_payload(kind, value)
     }
 
-    /// Add Delimiter
+    /// Add Delimiter item
     pub fn delimiter<T: Into<SizedPayload>>(self, value: T) -> Self {
         let kind = ItemType::Local(LocalType::Delimiter);
         self.item_with_payload(kind, value)
@@ -185,7 +205,7 @@ impl ReportDescriptorBuilder {
 
     /* HELPERS */
 
-    /// Add an ReportDescriptorItem
+    /// Add a ReportDescriptorItem
     fn push_item(mut self, item: ReportDescriptorItem) -> Self {
         self.items.push(item);
 
@@ -214,15 +234,9 @@ impl ReportDescriptorBuilder {
         self.push_item(item)
     }
 
-    /// Build to report
-    pub fn build(self) -> ReportDescriptorItemList {
-        ReportDescriptorItemList::new(self.items)
-    }
-}
-
-impl Default for ReportDescriptorBuilder {
-    fn default() -> Self {
-        ReportDescriptorBuilder { items: Vec::new() }
+    /// Build ReportDescriptor
+    pub fn build(self) -> ReportDescriptor {
+        ReportDescriptor::new(self.items)
     }
 }
 
@@ -274,8 +288,8 @@ impl From<Collection> for ItemType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::Size;
-    use crate::hid::{GlobalType, ItemType, ReportDescriptorItem};
+    use crate::report_descriptor::data::Size;
+    use crate::report_descriptor::{GlobalType, ItemType, ReportDescriptorItem};
     use crate::usage_table::keyboard::KeyboardUsage;
     use crate::usage_table::{Usage, UsagePage};
 

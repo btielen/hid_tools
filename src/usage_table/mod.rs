@@ -1,7 +1,11 @@
+#![allow(missing_docs)]
+
+use crate::usage_table::consumer::ConsumerUsage;
 use crate::usage_table::fido::FIDOAllianceUsage;
 use crate::usage_table::generic_desktop::GenericDesktopControlsUsage;
 use crate::usage_table::keyboard::KeyboardUsage;
 
+pub mod consumer;
 pub mod fido;
 pub mod generic_desktop;
 pub mod keyboard;
@@ -10,7 +14,10 @@ pub trait UsageId {
     fn usage_id(self) -> u16;
 }
 
-// https://usb.org/sites/default/files/hut1_3_0.pdf - page 17
+/// UsagePage organizes all related Usage controls
+///
+/// For definition in the HID protocol see:
+/// <https://usb.org/sites/default/files/hut1_3_0.pdf> - page 17
 #[derive(Debug, PartialEq, Clone)]
 pub enum UsagePage {
     Undefined,
@@ -52,7 +59,7 @@ pub enum UsagePage {
     Reserved(u16),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Usage {
     Undefined,
     GenericDesktopControls(GenericDesktopControlsUsage),
@@ -66,7 +73,7 @@ pub enum Usage {
     Button(u16),
     Ordinal(u16),
     Telephony(u16),
-    Consumer(u16),
+    Consumer(ConsumerUsage),
     Digitizer(u16),
     Haptics(u16),
     PhysicalInputDevice(u16),
@@ -205,7 +212,7 @@ impl From<Usage> for u16 {
             Usage::Button(i) => i,
             Usage::Ordinal(i) => i,
             Usage::Telephony(i) => i,
-            Usage::Consumer(i) => i,
+            Usage::Consumer(i) => u16::from(i),
             Usage::Digitizer(i) => i,
             Usage::Haptics(i) => i,
             Usage::PhysicalInputDevice(i) => i,
@@ -250,7 +257,7 @@ impl From<(&UsagePage, u16)> for Usage {
             UsagePage::Button => Usage::Button(key.1),
             UsagePage::Ordinal => Usage::Ordinal(key.1),
             UsagePage::Telephony => Usage::Telephony(key.1),
-            UsagePage::Consumer => Usage::Consumer(key.1),
+            UsagePage::Consumer => Usage::Consumer(ConsumerUsage::from(key.1)),
             UsagePage::Digitizer => Usage::Digitizer(key.1),
             UsagePage::Haptics => Usage::Haptics(key.1),
             UsagePage::PhysicalInputDevice => Usage::PhysicalInputDevice(key.1),

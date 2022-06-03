@@ -1,6 +1,6 @@
 use crate::usage_table::UsageId;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum FIDOAllianceUsage {
     Undefined,
     U2FAuthenticatorDevice,

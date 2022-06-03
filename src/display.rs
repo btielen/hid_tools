@@ -1,9 +1,11 @@
-use crate::data::{Size, SizedPayload};
-use crate::hid::{
+use crate::report::parsed::{ArrayValueItem, Field, ParsedReport, VarItem};
+use crate::report_descriptor::data::{Size, SizedPayload};
+use crate::report_descriptor::{
     Collection, Data, DataFieldOptions, GlobalType, ItemType, Linear, LocalType, MainType,
-    Mutability, NullState, ReportDescriptorItem, ReportDescriptorItemList, State, Structure, Value,
+    Mutability, NullState, ReportDescriptor, ReportDescriptorItem, State, Structure, Value,
     Volatile, Wrap,
 };
+use crate::usage_table::consumer::ConsumerUsage;
 use crate::usage_table::fido::FIDOAllianceUsage;
 use crate::usage_table::generic_desktop::GenericDesktopControlsUsage;
 use crate::usage_table::keyboard::KeyboardUsage;
@@ -283,7 +285,7 @@ impl fmt::Display for SizedPayload {
 /// Report Size (1)
 /// Input (2)
 ///```
-impl fmt::Display for ReportDescriptorItemList {
+impl fmt::Display for ReportDescriptor {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut usage_page = UsagePage::default();
         let mut indentations: usize = 0;
@@ -505,6 +507,541 @@ impl fmt::Display for GenericDesktopControlsUsage {
             Self::CallMuteToggle => f.write_str("Call Mute Toggle"),
             Self::CallMuteLED => f.write_str("Call Mute LED"),
             Self::Reserved(i) => write!(f, "Reserved ({})", i),
+        }
+    }
+}
+
+impl fmt::Display for ConsumerUsage {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            ConsumerUsage::Undefined => f.write_str("Undefined"),
+            ConsumerUsage::ConsumerControl => f.write_str("Consumer Control"),
+            ConsumerUsage::NumericKeyPad => f.write_str("Numeric Key Pad"),
+            ConsumerUsage::ProgrammableButtons => f.write_str("Programmable Buttons"),
+            ConsumerUsage::Microphone => f.write_str("Microphone"),
+            ConsumerUsage::Headphone => f.write_str("Headphone"),
+            ConsumerUsage::GraphicEqualizer => f.write_str("Graphic Equalizer"),
+            ConsumerUsage::Plus10 => f.write_str("Plus 10"),
+            ConsumerUsage::Plus100 => f.write_str("Plus 100"),
+            ConsumerUsage::AmPm => f.write_str("AM/PM"),
+            ConsumerUsage::Power => f.write_str("Power"),
+            ConsumerUsage::Reset => f.write_str("Reset"),
+            ConsumerUsage::Sleep => f.write_str("Sleep"),
+            ConsumerUsage::SleepAfter => f.write_str("Sleep After"),
+            ConsumerUsage::SleepMode => f.write_str("Sleep Mode"),
+            ConsumerUsage::Illumination => f.write_str("Illumination"),
+            ConsumerUsage::FunctionButtons => f.write_str("Function Buttons"),
+            ConsumerUsage::Menu => f.write_str("Menu"),
+            ConsumerUsage::MenuPick => f.write_str("Menu Pick"),
+            ConsumerUsage::MenuUp => f.write_str("Menu Up"),
+            ConsumerUsage::MenuDown => f.write_str("Menu Down"),
+            ConsumerUsage::MenuLeft => f.write_str("Menu Left"),
+            ConsumerUsage::MenuRight => f.write_str("Menu Right"),
+            ConsumerUsage::MenuEscape => f.write_str("Menu Escape"),
+            ConsumerUsage::MenuValueIncrease => f.write_str("Menu Value Increase"),
+            ConsumerUsage::MenuValueDecrease => f.write_str("Menu Value Decrease"),
+            ConsumerUsage::DataOnScreen => f.write_str("Data On Screen"),
+            ConsumerUsage::ClosedCaption => f.write_str("Closed Caption"),
+            ConsumerUsage::ClosedCaptionSelect => f.write_str("Closed Caption Select"),
+            ConsumerUsage::VcrTv => f.write_str("Vcr Tv"),
+            ConsumerUsage::BroadcastMode => f.write_str("Broadcast Mode"),
+            ConsumerUsage::Snapshot => f.write_str("Snapshot"),
+            ConsumerUsage::Still => f.write_str("Still"),
+            ConsumerUsage::PictureInPictureToggle => f.write_str("Picture In Picture Toggle"),
+            ConsumerUsage::PictureInPictureSwap => f.write_str("Picture In Picture Swap"),
+            ConsumerUsage::RedMenuButton => f.write_str("Red Menu Button"),
+            ConsumerUsage::GreenMenuButton => f.write_str("Green Menu Button"),
+            ConsumerUsage::BlueMenuButton => f.write_str("Blue Menu Button"),
+            ConsumerUsage::YellowMenuButton => f.write_str("Yellow Menu Button"),
+            ConsumerUsage::Aspect => f.write_str("Aspect"),
+            ConsumerUsage::Mode3DSelect => f.write_str("Mode3DSelect"),
+            ConsumerUsage::DisplayBrightnessIncrement => {
+                f.write_str("Display Brightness Increment")
+            }
+            ConsumerUsage::DisplayBrightnessDecrement => {
+                f.write_str("Display Brightness Decrement")
+            }
+            ConsumerUsage::DisplayBrightness => f.write_str("Display Brightness"),
+            ConsumerUsage::DisplayBacklightToggle => f.write_str("Display Backlight Toggle"),
+            ConsumerUsage::DisplaySetBrightnessToMinimum => {
+                f.write_str("Display Set Brightness To Minimum")
+            }
+            ConsumerUsage::DisplaySetBrightnessToMaximum => {
+                f.write_str("Display Set Brightness To Maximum")
+            }
+            ConsumerUsage::DisplaySetAutoBrightness => f.write_str("Display Set Auto Brightness"),
+            ConsumerUsage::CameraAccessEnabled => f.write_str("Camera Access Enabled"),
+            ConsumerUsage::CameraAccessDisabled => f.write_str("Camera Access Disabled"),
+            ConsumerUsage::CameraAccessToggle => f.write_str("Camera Access Toggle"),
+            ConsumerUsage::KeyboardBrightnessIncrement => {
+                f.write_str("Keyboard Brightness Increment")
+            }
+            ConsumerUsage::KeyboardBrightnessDecrement => {
+                f.write_str("Keyboard Brightness Decrement")
+            }
+            ConsumerUsage::KeyboardBacklightSetLevel => f.write_str("Keyboard Backlight Set Level"),
+            ConsumerUsage::KeyboardBacklightOOC => f.write_str("Keyboard Backlight OOC"),
+            ConsumerUsage::KeyboardBacklightSetMinimum => {
+                f.write_str("Keyboard Backlight Set Minimum")
+            }
+            ConsumerUsage::KeyboardBacklightSetMaximum => {
+                f.write_str("Keyboard Backlight Set Maximum")
+            }
+            ConsumerUsage::KeyboardBacklightAuto => f.write_str("Keyboard Backlight Auto"),
+            ConsumerUsage::Selection => f.write_str("Selection"),
+            ConsumerUsage::AssignSelection => f.write_str("Assign Selection"),
+            ConsumerUsage::ModeStep => f.write_str("Mode Step"),
+            ConsumerUsage::RecallLast => f.write_str("Recall Last"),
+            ConsumerUsage::EnterChannel => f.write_str("Enter Channel"),
+            ConsumerUsage::OrderMovie => f.write_str("Order Movie"),
+            ConsumerUsage::Channel => f.write_str("Channel"),
+            ConsumerUsage::MediaSelection => f.write_str("Media Selection"),
+            ConsumerUsage::MediaSelectComputer => f.write_str("Media Select Computer"),
+            ConsumerUsage::MediaSelectTV => f.write_str("Media Select TV"),
+            ConsumerUsage::MediaSelectWWW => f.write_str("Media Select WWW"),
+            ConsumerUsage::MediaSelectDVD => f.write_str("Media Select DVD"),
+            ConsumerUsage::MediaSelectTelephone => f.write_str("Media Select Telephone"),
+            ConsumerUsage::MediaSelectProgramGuide => f.write_str("Media Select Program Guide"),
+            ConsumerUsage::MediaSelectVideoPhone => f.write_str("Media Select Video Phone"),
+            ConsumerUsage::MediaSelectGames => f.write_str("Media Select Games"),
+            ConsumerUsage::MediaSelectMessages => f.write_str("Media Select Messages"),
+            ConsumerUsage::MediaSelectCD => f.write_str("Media Select CD"),
+            ConsumerUsage::MediaSelectVCR => f.write_str("Media Select VCR"),
+            ConsumerUsage::MediaSelectTuner => f.write_str("Media Select Tuner"),
+            ConsumerUsage::Quit => f.write_str("Quit"),
+            ConsumerUsage::Help => f.write_str("Help"),
+            ConsumerUsage::MediaSelectTape => f.write_str("Media Select Tape"),
+            ConsumerUsage::MediaSelectCable => f.write_str("Media Select Cable"),
+            ConsumerUsage::MediaSelectSatellite => f.write_str("Media Select Satellite"),
+            ConsumerUsage::MediaSelectSecurity => f.write_str("Media Select Security"),
+            ConsumerUsage::MediaSelectHome => f.write_str("Media Select Home"),
+            ConsumerUsage::MediaSelectCall => f.write_str("Media Select Call"),
+            ConsumerUsage::ChannelIncrement => f.write_str("Channel Increment"),
+            ConsumerUsage::ChannelDecrement => f.write_str("Channel Decrement"),
+            ConsumerUsage::MediaSelectSAP => f.write_str("Media Select SAP"),
+            ConsumerUsage::VCRPlus => f.write_str("VCRPlus"),
+            ConsumerUsage::Once => f.write_str("Once"),
+            ConsumerUsage::Daily => f.write_str("Daily"),
+            ConsumerUsage::Weekly => f.write_str("Weekly"),
+            ConsumerUsage::Monthly => f.write_str("Monthly"),
+            ConsumerUsage::Play => f.write_str("Play"),
+            ConsumerUsage::Pause => f.write_str("Pause"),
+            ConsumerUsage::Record => f.write_str("Record"),
+            ConsumerUsage::FastForward => f.write_str("Fast Forward"),
+            ConsumerUsage::Rewind => f.write_str("Rewind"),
+            ConsumerUsage::ScanNextTrack => f.write_str("Scan Next Track"),
+            ConsumerUsage::ScanPreviousTrack => f.write_str("Scan Previous Track"),
+            ConsumerUsage::Stop => f.write_str("Stop"),
+            ConsumerUsage::Eject => f.write_str("Eject"),
+            ConsumerUsage::RandomPlay => f.write_str("Random Play"),
+            ConsumerUsage::SelectDisc => f.write_str("Select Disc"),
+            ConsumerUsage::EnterDisc => f.write_str("Enter Disc"),
+            ConsumerUsage::Repeat => f.write_str("Repeat"),
+            ConsumerUsage::Tracking => f.write_str("Tracking"),
+            ConsumerUsage::TrackNormal => f.write_str("Track Normal"),
+            ConsumerUsage::SlowTracking => f.write_str("Slow Tracking"),
+            ConsumerUsage::FrameForward => f.write_str("Frame Forward"),
+            ConsumerUsage::FrameBack => f.write_str("Frame Back"),
+            ConsumerUsage::Mark => f.write_str("Mark"),
+            ConsumerUsage::ClearMark => f.write_str("Clear Mark"),
+            ConsumerUsage::RepeatFromMark => f.write_str("Repeat From Mark"),
+            ConsumerUsage::ReturnToMark => f.write_str("Return To Mark"),
+            ConsumerUsage::SearchMarkForward => f.write_str("Search Mark Forward"),
+            ConsumerUsage::SearchMarkBackwards => f.write_str("Search Mark Backwards"),
+            ConsumerUsage::CounterReset => f.write_str("Counter Reset"),
+            ConsumerUsage::ShowCounter => f.write_str("Show Counter"),
+            ConsumerUsage::TrackingIncrement => f.write_str("Tracking Increment"),
+            ConsumerUsage::TrackingDecrement => f.write_str("Tracking Decrement"),
+            ConsumerUsage::StopEject => f.write_str("Stop Eject"),
+            ConsumerUsage::PlayPause => f.write_str("Play Pause"),
+            ConsumerUsage::PlaySkip => f.write_str("Play Skip"),
+            ConsumerUsage::VoiceCommand => f.write_str("Voice Command"),
+            ConsumerUsage::InvokeCaptureInterface => f.write_str("Invoke Capture Interface"),
+            ConsumerUsage::StartOrStopGameRecording => f.write_str("Start Or Stop Game Recording"),
+            ConsumerUsage::HistoricalGameCapture => f.write_str("Historical Game Capture"),
+            ConsumerUsage::CaptureGameScreenshot => f.write_str("Capture Game Screenshot"),
+            ConsumerUsage::ShowOrHideRecordingIndicator => {
+                f.write_str("Show Or Hide Recording Indicator")
+            }
+            ConsumerUsage::StartOrStopMicrophoneCapture => {
+                f.write_str("Start Or Stop Microphone Capture")
+            }
+            ConsumerUsage::StartOrStopCameraCapture => f.write_str("Start Or Stop Camera Capture"),
+            ConsumerUsage::StartOrStopGameBroadcast => f.write_str("Start Or Stop Game Broadcast"),
+            ConsumerUsage::StartOrStopVoiceDictationSession => {
+                f.write_str("Start Or Stop Voice Dictation Session")
+            }
+            ConsumerUsage::InvokeDismissEmojiPicker => f.write_str("Invoke Dismiss Emoji Picker"),
+            ConsumerUsage::Volume => f.write_str("Volume"),
+            ConsumerUsage::Balance => f.write_str("Balance"),
+            ConsumerUsage::Mute => f.write_str("Mute"),
+            ConsumerUsage::Bass => f.write_str("Bass"),
+            ConsumerUsage::Treble => f.write_str("Treble"),
+            ConsumerUsage::BassBoost => f.write_str("Bass Boost"),
+            ConsumerUsage::SurroundMode => f.write_str("Surround Mode"),
+            ConsumerUsage::Loudness => f.write_str("Loudness"),
+            ConsumerUsage::MPX => f.write_str("MPX"),
+            ConsumerUsage::VolumeIncrement => f.write_str("Volume Increment"),
+            ConsumerUsage::VolumeDecrement => f.write_str("Volume Decrement"),
+            ConsumerUsage::SpeedSelect => f.write_str("Speed Select"),
+            ConsumerUsage::PlaybackSpeed => f.write_str("Playback Speed"),
+            ConsumerUsage::StandardPlay => f.write_str("Standard Play"),
+            ConsumerUsage::LongPlay => f.write_str("Long Play"),
+            ConsumerUsage::ExtendedPlay => f.write_str("Extended Play"),
+            ConsumerUsage::Slow => f.write_str("Slow"),
+            ConsumerUsage::FanEnable => f.write_str("Fan Enable"),
+            ConsumerUsage::FanSpeed => f.write_str("Fan Speed"),
+            ConsumerUsage::LightEnable => f.write_str("Light Enable"),
+            ConsumerUsage::LightIlluminationLevel => f.write_str("Light Illumination Level"),
+            ConsumerUsage::ClimateControlEnable => f.write_str("Climate Control Enable"),
+            ConsumerUsage::RoomTemperature => f.write_str("Room Temperature"),
+            ConsumerUsage::SecurityEnable => f.write_str("Security Enable"),
+            ConsumerUsage::FireAlarm => f.write_str("Fire Alarm"),
+            ConsumerUsage::PoliceAlarm => f.write_str("Police Alarm"),
+            ConsumerUsage::Proximity => f.write_str("Proximity"),
+            ConsumerUsage::Motion => f.write_str("Motion"),
+            ConsumerUsage::DuressAlarm => f.write_str("Duress Alarm"),
+            ConsumerUsage::HoldupAlarm => f.write_str("Holdup Alarm"),
+            ConsumerUsage::MedicalAlarm => f.write_str("Medical Alarm"),
+            ConsumerUsage::BalanceRight => f.write_str("Balance Right"),
+            ConsumerUsage::BalanceLeft => f.write_str("Balance Left"),
+            ConsumerUsage::BassIncrement => f.write_str("Bass Increment"),
+            ConsumerUsage::BassDecrement => f.write_str("Bass Decrement"),
+            ConsumerUsage::TrebleIncrement => f.write_str("Treble Increment"),
+            ConsumerUsage::TrebleDecrement => f.write_str("Treble Decrement"),
+            ConsumerUsage::SpeakerSystem => f.write_str("Speaker System"),
+            ConsumerUsage::ChannelLeft => f.write_str("Channel Left"),
+            ConsumerUsage::ChannelRight => f.write_str("Channel Right"),
+            ConsumerUsage::ChannelCenter => f.write_str("Channel Center"),
+            ConsumerUsage::ChannelFront => f.write_str("Channel Front"),
+            ConsumerUsage::ChannelCenterFront => f.write_str("Channel Center Front"),
+            ConsumerUsage::ChannelSide => f.write_str("Channel Side"),
+            ConsumerUsage::ChannelSurround => f.write_str("Channel Surround"),
+            ConsumerUsage::ChannelLowFrequencyEnhancement => {
+                f.write_str("Channel Low Frequency Enhancement")
+            }
+            ConsumerUsage::ChannelTop => f.write_str("Channel Top"),
+            ConsumerUsage::ChannelUnknown => f.write_str("Channel Unknown"),
+            ConsumerUsage::SubChannel => f.write_str("Sub Channel"),
+            ConsumerUsage::SubChannelIncrement => f.write_str("Sub Channel Increment"),
+            ConsumerUsage::SubChannelDecrement => f.write_str("Sub Channel Decrement"),
+            ConsumerUsage::AlternateAudioIncrement => f.write_str("Alternate Audio Increment"),
+            ConsumerUsage::AlternateAudioDecrement => f.write_str("Alternate Audio Decrement"),
+            ConsumerUsage::ApplicationLaunchButtons => f.write_str("Application Launch Buttons"),
+            ConsumerUsage::ALLaunchButtonConfigurationTool => {
+                f.write_str("AL Launch Button Configuration Tool")
+            }
+            ConsumerUsage::ALProgrammableButtonConfiguration => {
+                f.write_str("AL Programmable Button Configuration")
+            }
+            ConsumerUsage::ALConsumerControlConfiguration => {
+                f.write_str("AL Consumer Control Configuration")
+            }
+            ConsumerUsage::ALWordProcessor => f.write_str("AL Word Processor"),
+            ConsumerUsage::ALTextEditor => f.write_str("AL Text Editor"),
+            ConsumerUsage::ALSpreadsheet => f.write_str("AL Spreadsheet"),
+            ConsumerUsage::ALGraphicsEditor => f.write_str("AL Graphics Editor"),
+            ConsumerUsage::ALPresentationApp => f.write_str("AL Presentation App"),
+            ConsumerUsage::ALDatabaseApp => f.write_str("AL Database App"),
+            ConsumerUsage::ALEmailReader => f.write_str("AL Email Reader"),
+            ConsumerUsage::ALNewsreader => f.write_str("AL Newsreader"),
+            ConsumerUsage::ALVoicemail => f.write_str("AL Voicemail"),
+            ConsumerUsage::ALContactsAddressBook => f.write_str("AL Contacts Address Book"),
+            ConsumerUsage::ALCalendarSchedule => f.write_str("AL Calendar Schedule"),
+            ConsumerUsage::ALTaskProjectManager => f.write_str("AL Task Project Manager"),
+            ConsumerUsage::ALLogJournalTimecard => f.write_str("AL Log Journal Timecard"),
+            ConsumerUsage::ALCheckbookFinance => f.write_str("AL Checkbook Finance"),
+            ConsumerUsage::ALCalculator => f.write_str("AL Calculator"),
+            ConsumerUsage::ALAVCapturePlayback => f.write_str("AL AV Capture Playback"),
+            ConsumerUsage::ALLocalMachineBrowser => f.write_str("AL Local Machine Browser"),
+            ConsumerUsage::ALLANWANBrowser => f.write_str("AL LAN WAN Browser"),
+            ConsumerUsage::ALInternetBrowser => f.write_str("AL Internet Browser"),
+            ConsumerUsage::ALRemoteNetworkingISPConnect => {
+                f.write_str("AL Remote Networking ISP Connect")
+            }
+            ConsumerUsage::ALNetworkConference => f.write_str("AL Network Conference"),
+            ConsumerUsage::ALNetworkChat => f.write_str("AL Network Chat"),
+            ConsumerUsage::ALTelephonyDialer => f.write_str("AL Telephony Dialer"),
+            ConsumerUsage::ALLogon => f.write_str("AL Logon"),
+            ConsumerUsage::ALLogoff => f.write_str("AL Logoff"),
+            ConsumerUsage::ALLogonLogoff => f.write_str("AL Logon Logoff"),
+            ConsumerUsage::ALTerminalLockScreensaver => f.write_str("AL Terminal Lock Screensaver"),
+            ConsumerUsage::ALControlPanel => f.write_str("AL Control Panel"),
+            ConsumerUsage::ALCommandLineProcessorRun => {
+                f.write_str("AL Command Line Processor Run")
+            }
+            ConsumerUsage::ALProcessTaskManager => f.write_str("AL Process Task Manager"),
+            ConsumerUsage::ALSelectTaskApplication => f.write_str("AL Select Task Application"),
+            ConsumerUsage::ALNextTaskApplication => f.write_str("AL Next Task Application"),
+            ConsumerUsage::ALPreviousTaskApplication => f.write_str("AL Previous Task Application"),
+            ConsumerUsage::ALPreemptiveHaltTaskApplication => {
+                f.write_str("AL Preemptive Halt Task Application")
+            }
+            ConsumerUsage::ALIntegratedHelpCenter => f.write_str("AL Integrated Help Center"),
+            ConsumerUsage::ALDocuments => f.write_str("AL Documents"),
+            ConsumerUsage::ALThesaurus => f.write_str("AL Thesaurus"),
+            ConsumerUsage::ALDictionary => f.write_str("AL Dictionary"),
+            ConsumerUsage::ALDesktop => f.write_str("AL Desktop"),
+            ConsumerUsage::ALSpellCheck => f.write_str("AL Spell Check"),
+            ConsumerUsage::ALGrammarCheck => f.write_str("ALGrammar Check"),
+            ConsumerUsage::ALWirelessStatus => f.write_str("AL Wireless Status"),
+            ConsumerUsage::ALKeyboardLayout => f.write_str("AL Keyboard Layout"),
+            ConsumerUsage::ALVirusProtection => f.write_str("AL Virus Protection"),
+            ConsumerUsage::ALEncryption => f.write_str("AL Encryption"),
+            ConsumerUsage::ALScreenSaver => f.write_str("AL Screen Saver"),
+            ConsumerUsage::ALAlarms => f.write_str("AL Alarms"),
+            ConsumerUsage::ALClock => f.write_str("AL Clock"),
+            ConsumerUsage::ALFileBrowser => f.write_str("AL File Browser"),
+            ConsumerUsage::ALPowerStatus => f.write_str("AL Power Status"),
+            ConsumerUsage::ALImageBrowser => f.write_str("AL Image Browser"),
+            ConsumerUsage::ALAudioBrowser => f.write_str("AL Audio Browser"),
+            ConsumerUsage::ALMovieBrowser => f.write_str("AL Movie Browser"),
+            ConsumerUsage::ALDigitalRightsManager => f.write_str("AL Digital Rights Manager"),
+            ConsumerUsage::ALDigitalWallet => f.write_str("AL Digital Wallet"),
+            ConsumerUsage::ALInstantMessaging => f.write_str("AL Instant Messaging"),
+            ConsumerUsage::ALOEMFeaturesTipsTutorialBrowser => {
+                f.write_str("AL OEM Features Tips Tutorial Browser")
+            }
+            ConsumerUsage::ALOEMHelp => f.write_str("AL OEM Help"),
+            ConsumerUsage::ALOnlineCommunity => f.write_str("AL Online Community"),
+            ConsumerUsage::ALEntertainmentContentBrowser => {
+                f.write_str("AL Entertainment Content Browser")
+            }
+            ConsumerUsage::ALOnlineShoppingBrowser => f.write_str("AL Online Shopping Browser"),
+            ConsumerUsage::ALSmartCardInformationHelp => {
+                f.write_str("AL Smart Card Information Help")
+            }
+            ConsumerUsage::ALMarketMonitorFinanceBrowser => {
+                f.write_str("AL Market Monitor Finance Browser")
+            }
+            ConsumerUsage::ALCustomizedCorporateNewsBrowser => {
+                f.write_str("AL Customized Corporate News Browser")
+            }
+            ConsumerUsage::ALOnlineActivityBrowser => f.write_str("AL Online Activity Browser"),
+            ConsumerUsage::ALResearchSearchBrowser => f.write_str("AL Research Search Browser"),
+            ConsumerUsage::ALAudioPlayer => f.write_str("AL Audio Player"),
+            ConsumerUsage::ALMessageStatus => f.write_str("AL Message Status"),
+            ConsumerUsage::ALContactSync => f.write_str("AL Contact Sync"),
+            ConsumerUsage::ALNavigation => f.write_str("AL Navigation"),
+            ConsumerUsage::ALContextawareDesktopAssistant => {
+                f.write_str("AL Contextaware Desktop Assistant")
+            }
+            ConsumerUsage::GenericGUIApplicationControls => {
+                f.write_str("Generic GUI Application Controls")
+            }
+            ConsumerUsage::ACNew => f.write_str("AC New"),
+            ConsumerUsage::ACOpen => f.write_str("AC Open"),
+            ConsumerUsage::ACClose => f.write_str("AC Close"),
+            ConsumerUsage::ACExit => f.write_str("AC Exit"),
+            ConsumerUsage::ACMaximize => f.write_str("AC Maximize"),
+            ConsumerUsage::ACMinimize => f.write_str("AC Minimize"),
+            ConsumerUsage::ACSave => f.write_str("AC Save"),
+            ConsumerUsage::ACPrint => f.write_str("AC Print"),
+            ConsumerUsage::ACProperties => f.write_str("AC Properties"),
+            ConsumerUsage::ACUndo => f.write_str("AC Undo"),
+            ConsumerUsage::ACCopy => f.write_str("AC Copy"),
+            ConsumerUsage::ACCut => f.write_str("AC Cut"),
+            ConsumerUsage::ACPaste => f.write_str("AC Paste"),
+            ConsumerUsage::ACSelectAll => f.write_str("AC Select All"),
+            ConsumerUsage::ACFind => f.write_str("AC Find"),
+            ConsumerUsage::ACFindAndReplace => f.write_str("AC Find And Replace"),
+            ConsumerUsage::ACSearch => f.write_str("AC Search"),
+            ConsumerUsage::ACGoTo => f.write_str("AC Go To"),
+            ConsumerUsage::ACHome => f.write_str("AC Home"),
+            ConsumerUsage::ACBack => f.write_str("AC Back"),
+            ConsumerUsage::ACForward => f.write_str("AC Forward"),
+            ConsumerUsage::ACStop => f.write_str("AC Stop"),
+            ConsumerUsage::ACRefresh => f.write_str("AC Refresh"),
+            ConsumerUsage::ACPreviousLink => f.write_str("AC Previous Link"),
+            ConsumerUsage::ACNextLink => f.write_str("AC Next Link"),
+            ConsumerUsage::ACBookmarks => f.write_str("AC Bookmarks"),
+            ConsumerUsage::ACHistory => f.write_str("AC History"),
+            ConsumerUsage::ACSubscriptions => f.write_str("AC Subscriptions"),
+            ConsumerUsage::ACZoomIn => f.write_str("AC Zoom In"),
+            ConsumerUsage::ACZoomOut => f.write_str("AC Zoom Out"),
+            ConsumerUsage::ACZoom => f.write_str("AC Zoom"),
+            ConsumerUsage::ACFullScreenView => f.write_str("AC Full Screen View"),
+            ConsumerUsage::ACNormalView => f.write_str("AC Normal View"),
+            ConsumerUsage::ACViewToggle => f.write_str("AC View Toggle"),
+            ConsumerUsage::ACScrollUp => f.write_str("AC Scroll Up"),
+            ConsumerUsage::ACScrollDown => f.write_str("AC Scroll Down"),
+            ConsumerUsage::ACScroll => f.write_str("AC Scroll"),
+            ConsumerUsage::ACPanLeft => f.write_str("AC Pan Left"),
+            ConsumerUsage::ACPanRight => f.write_str("AC Pan Right"),
+            ConsumerUsage::ACPan => f.write_str("AC Pan"),
+            ConsumerUsage::ACNewWindow => f.write_str("AC New Window"),
+            ConsumerUsage::ACTileHorizontally => f.write_str("AC Tile Horizontally"),
+            ConsumerUsage::ACTileVertically => f.write_str("AC Tile Vertically"),
+            ConsumerUsage::ACFormat => f.write_str("AC Format"),
+            ConsumerUsage::ACEdit => f.write_str("AC Edit"),
+            ConsumerUsage::ACBold => f.write_str("AC Bold"),
+            ConsumerUsage::ACItalics => f.write_str("AC Italics"),
+            ConsumerUsage::ACUnderline => f.write_str("AC Underline"),
+            ConsumerUsage::ACStrikethrough => f.write_str("AC Strikethrough"),
+            ConsumerUsage::ACSubscript => f.write_str("AC Subscript"),
+            ConsumerUsage::ACSuperscript => f.write_str("AC Superscript"),
+            ConsumerUsage::ACAllCaps => f.write_str("AC All Caps"),
+            ConsumerUsage::ACRotate => f.write_str("AC Rotate"),
+            ConsumerUsage::ACResize => f.write_str("AC Resize"),
+            ConsumerUsage::ACFlipHorizontal => f.write_str("AC Flip Horizontal"),
+            ConsumerUsage::ACFlipVertical => f.write_str("AC Flip Vertical"),
+            ConsumerUsage::ACMirrorHorizontal => f.write_str("AC Mirror Horizontal"),
+            ConsumerUsage::ACMirrorVertical => f.write_str("AC Mirror Vertical"),
+            ConsumerUsage::ACFontSelect => f.write_str("AC Font Select"),
+            ConsumerUsage::ACFontColor => f.write_str("AC Font Color"),
+            ConsumerUsage::ACFontSize => f.write_str("AC Font Size"),
+            ConsumerUsage::ACJustifyLeft => f.write_str("AC Justify Left"),
+            ConsumerUsage::ACJustifyCenterH => f.write_str("AC Justify CenterH"),
+            ConsumerUsage::ACJustifyRight => f.write_str("AC Justify Right"),
+            ConsumerUsage::ACJustifyBlockH => f.write_str("AC Justify BlockH"),
+            ConsumerUsage::ACJustifyTop => f.write_str("AC Justify Top"),
+            ConsumerUsage::ACJustifyCenterV => f.write_str("AC Justify CenterV"),
+            ConsumerUsage::ACJustifyBottom => f.write_str("AC Justify Bottom"),
+            ConsumerUsage::ACJustifyBlockV => f.write_str("AC Justify BlockV"),
+            ConsumerUsage::ACIndentDecrease => f.write_str("AC Indent Decrease"),
+            ConsumerUsage::ACIndentIncrease => f.write_str("AC Indent Increase"),
+            ConsumerUsage::ACNumberedList => f.write_str("AC Numbered List"),
+            ConsumerUsage::ACRestartNumbering => f.write_str("AC Restart Numbering"),
+            ConsumerUsage::ACBulletedList => f.write_str("AC Bulleted List"),
+            ConsumerUsage::ACPromote => f.write_str("AC Promote"),
+            ConsumerUsage::ACDemote => f.write_str("AC Demote"),
+            ConsumerUsage::ACYes => f.write_str("AC Yes"),
+            ConsumerUsage::ACNo => f.write_str("AC No"),
+            ConsumerUsage::ACCancel => f.write_str("AC Cancel"),
+            ConsumerUsage::ACCatalog => f.write_str("AC Catalog"),
+            ConsumerUsage::ACBuyCheckout => f.write_str("AC Buy Checkout"),
+            ConsumerUsage::ACAddToCart => f.write_str("AC Add To Cart"),
+            ConsumerUsage::ACExpand => f.write_str("AC Expand"),
+            ConsumerUsage::ACExpandAll => f.write_str("AC Expand All"),
+            ConsumerUsage::ACCollapse => f.write_str("AC Collapse"),
+            ConsumerUsage::ACCollapseAll => f.write_str("AC Collapse All"),
+            ConsumerUsage::ACPrintPreview => f.write_str("AC Print Preview"),
+            ConsumerUsage::ACPasteSpecial => f.write_str("AC Paste Special"),
+            ConsumerUsage::ACInsertMode => f.write_str("AC Insert Mode"),
+            ConsumerUsage::ACDelete => f.write_str("AC Delete"),
+            ConsumerUsage::ACLock => f.write_str("AC Lock"),
+            ConsumerUsage::ACUnlock => f.write_str("AC Unlock"),
+            ConsumerUsage::ACProtect => f.write_str("AC Protect"),
+            ConsumerUsage::ACUnprotect => f.write_str("AC Unprotect"),
+            ConsumerUsage::ACAttachComment => f.write_str("AC Attach Comment"),
+            ConsumerUsage::ACDeleteComment => f.write_str("AC Delete Comment"),
+            ConsumerUsage::ACViewComment => f.write_str("AC View Comment"),
+            ConsumerUsage::ACSelectWord => f.write_str("AC Select Word"),
+            ConsumerUsage::ACSelectSentence => f.write_str("AC Select Sentence"),
+            ConsumerUsage::ACSelectParagraph => f.write_str("AC Select Paragraph"),
+            ConsumerUsage::ACSelectColumn => f.write_str("AC Select Column"),
+            ConsumerUsage::ACSelectRow => f.write_str("AC Select Row"),
+            ConsumerUsage::ACSelectTable => f.write_str("AC Select Table"),
+            ConsumerUsage::ACSelectObject => f.write_str("AC Select Object"),
+            ConsumerUsage::ACRedoRepeat => f.write_str("AC Redo Repeat"),
+            ConsumerUsage::ACSort => f.write_str("AC Sort"),
+            ConsumerUsage::ACSortAscending => f.write_str("AC Sort Ascending"),
+            ConsumerUsage::ACSortDescending => f.write_str("AC Sort Descending"),
+            ConsumerUsage::ACFilter => f.write_str("AC Filter"),
+            ConsumerUsage::ACSetClock => f.write_str("AC Set Clock"),
+            ConsumerUsage::ACViewClock => f.write_str("AC View Clock"),
+            ConsumerUsage::ACSelectTimeZone => f.write_str("AC Select Time Zone"),
+            ConsumerUsage::ACEditTimeZones => f.write_str("AC Edit Time Zones"),
+            ConsumerUsage::ACSetAlarm => f.write_str("AC Set Alarm"),
+            ConsumerUsage::ACClearAlarm => f.write_str("AC Clear Alarm"),
+            ConsumerUsage::ACSnoozeAlarm => f.write_str("AC Snooze Alarm"),
+            ConsumerUsage::ACResetAlarm => f.write_str("AC Reset Alarm"),
+            ConsumerUsage::ACSynchronize => f.write_str("AC Synchronize"),
+            ConsumerUsage::ACSendReceive => f.write_str("AC Send Receive"),
+            ConsumerUsage::ACSendTo => f.write_str("AC Send To"),
+            ConsumerUsage::ACReply => f.write_str("AC Reply"),
+            ConsumerUsage::ACReplyAll => f.write_str("AC Reply All"),
+            ConsumerUsage::ACForwardMsg => f.write_str("AC Forward Msg"),
+            ConsumerUsage::ACSend => f.write_str("AC Send"),
+            ConsumerUsage::ACAttachFile => f.write_str("AC Attach File"),
+            ConsumerUsage::ACUpload => f.write_str("AC Upload"),
+            ConsumerUsage::ACDownloadSaveTargetAs => f.write_str("AC Download Save Target As"),
+            ConsumerUsage::ACSetBorders => f.write_str("AC Set Borders"),
+            ConsumerUsage::ACInsertRow => f.write_str("AC Insert Row"),
+            ConsumerUsage::ACInsertColumn => f.write_str("AC Insert Column"),
+            ConsumerUsage::ACInsertFile => f.write_str("AC Insert File"),
+            ConsumerUsage::ACInsertPicture => f.write_str("AC Insert Picture"),
+            ConsumerUsage::ACInsertObject => f.write_str("AC Insert Object"),
+            ConsumerUsage::ACInsertSymbol => f.write_str("AC Insert Symbol"),
+            ConsumerUsage::ACSaveAndClose => f.write_str("AC Save And Close"),
+            ConsumerUsage::ACRename => f.write_str("AC Rename"),
+            ConsumerUsage::ACMerge => f.write_str("AC Merge"),
+            ConsumerUsage::ACSplit => f.write_str("AC Split"),
+            ConsumerUsage::ACDistributeHorizontally => f.write_str("AC Distribute Horizontally"),
+            ConsumerUsage::ACDistributeVertically => f.write_str("AC Distribute Vertically"),
+            ConsumerUsage::ACNextKeyboardLayoutSelect => {
+                f.write_str("AC Next Keyboard Layout Select")
+            }
+            ConsumerUsage::ACNavigationGuidance => f.write_str("AC Navigation Guidance"),
+            ConsumerUsage::ACDesktopShowAllWindows => f.write_str("AC Desktop Show All Windows"),
+            ConsumerUsage::ACSoftKeyLeft => f.write_str("AC Soft Key Left"),
+            ConsumerUsage::ACSoftKeyRight => f.write_str("AC Soft Key Right"),
+            ConsumerUsage::ACDesktopShowAllApplications => {
+                f.write_str("AC Desktop Show All Applications")
+            }
+            ConsumerUsage::ACIdleKeepAlive => f.write_str("AC Idle Keep Alive"),
+            ConsumerUsage::ExtendedKeyboardAttributesCollection => {
+                f.write_str("Extended Keyboard Attributes Collection")
+            }
+            ConsumerUsage::KeyboardFormFactor => f.write_str("Keyboard Form Factor"),
+            ConsumerUsage::KeyboardKeyType => f.write_str("Keyboard Key Type"),
+            ConsumerUsage::KeyboardPhysicalLayout => f.write_str("Keyboard Physical Layout"),
+            ConsumerUsage::VendorSpecificKeyboardPhysicalLayout => {
+                f.write_str("Vendor Specific Keyboard Physical Layout")
+            }
+            ConsumerUsage::KeyboardIETFLanguageTagIndex => {
+                f.write_str("Keyboard IETFLanguage Tag Index")
+            }
+            ConsumerUsage::ImplementedKeyboardInputAssistControls => {
+                f.write_str("Implemented Keyboard Input Assist Controls")
+            }
+            ConsumerUsage::KeyboardInputAssistPrevious => {
+                f.write_str("Keyboard Input Assist Previous")
+            }
+            ConsumerUsage::KeyboardInputAssistNext => f.write_str("Keyboard Input Assist Next"),
+            ConsumerUsage::KeyboardInputAssistPreviousGroup => {
+                f.write_str("Keyboard Input Assist Previous Group")
+            }
+            ConsumerUsage::KeyboardInputAssistNextGroup => {
+                f.write_str("Keyboard Input Assist Next Group")
+            }
+            ConsumerUsage::KeyboardInputAssistAccept => f.write_str("Keyboard Input Assist Accept"),
+            ConsumerUsage::KeyboardInputAssistCancel => f.write_str("Keyboard Input Assist Cancel"),
+            ConsumerUsage::PrivacyScreenToggle => f.write_str("Privacy Screen Toggle"),
+            ConsumerUsage::PrivacyScreenLevelDecrement => {
+                f.write_str("Privacy Screen Level Decrement")
+            }
+            ConsumerUsage::PrivacyScreenLevelIncrement => {
+                f.write_str("Privacy Screen Level Increment")
+            }
+            ConsumerUsage::PrivacyScreenLevelMinimum => f.write_str("Privacy Screen Level Minimum"),
+            ConsumerUsage::PrivacyScreenLevelMaximum => f.write_str("Privacy Screen Level Maximum"),
+            ConsumerUsage::ContactEdited => f.write_str("Contact Edited"),
+            ConsumerUsage::ContactAdded => f.write_str("Contact Added"),
+            ConsumerUsage::ContactRecordActive => f.write_str("Contact Record Active"),
+            ConsumerUsage::ContactIndex => f.write_str("Contact Index"),
+            ConsumerUsage::ContactNickname => f.write_str("Contact Nickname"),
+            ConsumerUsage::ContactFirstName => f.write_str("Contact First Name"),
+            ConsumerUsage::ContactLastName => f.write_str("Contact Last Name"),
+            ConsumerUsage::ContactFullName => f.write_str("Contact Full Name"),
+            ConsumerUsage::ContactPhoneNumberPersonal => {
+                f.write_str("Contact Phone Number Personal")
+            }
+            ConsumerUsage::ContactPhoneNumberBusiness => {
+                f.write_str("Contact Phone Number Business")
+            }
+            ConsumerUsage::ContactPhoneNumberMobile => f.write_str("Contact Phone Number Mobile"),
+            ConsumerUsage::ContactPhoneNumberPager => f.write_str("Contact Phone Number Pager"),
+            ConsumerUsage::ContactPhoneNumberFax => f.write_str("Contact Phone Number Fax"),
+            ConsumerUsage::ContactPhoneNumberOther => f.write_str("Contact Phone Number Other"),
+            ConsumerUsage::ContactEmailPersonal => f.write_str("Contact Email Personal"),
+            ConsumerUsage::ContactEmailBusiness => f.write_str("Contact Email Business"),
+            ConsumerUsage::ContactEmailOther => f.write_str("Contact Email Other"),
+            ConsumerUsage::ContactEmailMain => f.write_str("Contact Email Main"),
+            ConsumerUsage::ContactSpeedDialNumber => f.write_str("Contact Speed Dial Number"),
+            ConsumerUsage::ContactStatusFlag => f.write_str("Contact Status Flag"),
+            ConsumerUsage::ContactMisc => f.write_str("Contact Misc"),
+            ConsumerUsage::Reserved(i) => write!(f, "Reserved({})", i),
         }
     }
 }
@@ -753,11 +1290,51 @@ impl fmt::Display for FIDOAllianceUsage {
     }
 }
 
+impl fmt::Display for ParsedReport {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        for field in &self.fields {
+            match field {
+                Field::ArrayZeroValue(_) => {} // ignore zero value
+                _ => writeln!(f, "{}", field)?,
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl fmt::Display for Field {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Field::ReportId(id) => write!(f, "ReportId({})", id),
+            Field::Constant(c) => write!(f, "Constant({})", c),
+            Field::Variable(item) => write!(f, "{}", item),
+            Field::ArrayValue(item) => {
+                write!(f, "{}", item)
+            }
+            Field::ArrayZeroValue(_) => {
+                write!(f, "")
+            }
+        }
+    }
+}
+
+impl fmt::Display for VarItem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{} - {}({})", self.usage_page, self.usage, self.value)
+    }
+}
+
+impl fmt::Display for ArrayValueItem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{} - {}", self.usage_page, self.usage)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::Size;
-    use crate::parse::report_descriptor;
+    use crate::report_descriptor::data::Size;
 
     #[test]
     fn usage_page_item() {
@@ -775,35 +1352,5 @@ mod tests {
         let bytes: [u8; 1] = [0x11];
         let p = SizedPayload::from(bytes);
         assert_eq!(format!("{}", p), "17");
-    }
-
-    #[test]
-    fn full_report_descriptor() {
-        let report_bytes = [
-            0x05, 0x01, // Usage Page (Generic Desktop)
-            0x09, 0x06, // Usage (Keyboard)
-            0xa1, 0x01, // Collection (Application)
-            0x85, 0x01, // .Report ID (1)
-            0x05, 0x07, // .Usage Page (Keyboard)
-            0x19, 0xe0, // .Usage Minimum (224)
-            0x29, 0xe7, // .Usage Maximum (231)
-            0x15, 0x00, // .Logical Minimum (0)
-            0x25, 0x01, // .Logical Maximum (1)
-            0x75, 0x01, // .Report Size (1)
-            0x95, 0x08, // .Report Count (8)
-            0x81, 0x02, // .Input (Data,Var,Abs)
-            0x19, 0x00, // .Usage Minimum (0)
-            0x29, 0x97, // .Usage Maximum (151)
-            0x15, 0x00, // .Logical Minimum (0)
-            0x25, 0x01, // .Logical Maximum (1)
-            0x75, 0x01, // .Report Size (1)
-            0x95, 0x98, // .Report Count (152)
-            0x81, 0x02, // .Input (Data,Var,Abs)
-            0xc0, // End Collection
-        ];
-
-        let result = report_descriptor(&report_bytes).unwrap();
-
-        print!("{}", result)
     }
 }

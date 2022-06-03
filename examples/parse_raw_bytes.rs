@@ -1,5 +1,4 @@
-use hid_tools::parse;
-use nom::Finish;
+use hid_tools::report_descriptor::parse;
 
 fn main() {
     let bytes = [
