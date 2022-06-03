@@ -1,10 +1,20 @@
 [package]
 name = "hid_tools"
+authors = ["B. Tielen <benno@tielen.nl>"]
 version = "0.1.0"
 edition = "2021"
+description = "Tools for working with the Human Interface Device (HID) protocol"
+homepage = "https://github.com/btielen/hid_tools"
+repository = "https://github.com/btielen/hid_tools"
+readme = "README.md"
+license = "MIT"
+keywords = ["HID", "Human Interface Device", "usb"]
+categories = ["parsing", "embedded"]
 
 [dependencies]
 thiserror = "1.0.30"
 nom = "7.1.1"
-nix = "0.23.1"
 bitstream-io = "1.3.0"
+
+[dev-dependencies]
+nix = "0.23.1"

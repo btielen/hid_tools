@@ -1,3 +1,9 @@
+/**
+
+This examples reads raw report & report descriptor data from the linux kernel using the
+HID-RAW API. The `nix` crate bridges this example and the kernel.
+
+*/
 use hid_tools::report::{expected_input_reports, parse_raw_input_report};
 use nix::ioctl_read;
 use std::fs;
@@ -5,11 +11,14 @@ use std::io::Read;
 use std::os::unix::io::AsRawFd;
 use std::path::PathBuf;
 
+// Change the path for your device
 const HID_DEVICE_PATH: &str = "/dev/hidraw1";
 
+// Create functions to read data from kernel
+// For declarations of the SPI_IOC_MAGIC and SPI_IOC_TYPE_MODE, see
 // https://github.com/torvalds/linux/blob/master/include/uapi/linux/hidraw.h
-ioctl_read!(hid_read_descr_size, b'H', 0x01, u32);
-ioctl_read!(hid_read_descriptor, b'H', 0x02, ReportDescriptor);
+ioctl_read!(hid_read_report_descriptor_size, b'H', 0x01, u32);
+ioctl_read!(hid_read_report_descriptor, b'H', 0x02, ReportDescriptor);
 ioctl_read!(hid_read_device_info, b'H', 0x03, DeviceInfo);
 
 #[derive(Debug)]
@@ -36,15 +45,15 @@ fn main() {
     options.read(true);
 
     let mut file = options.open(PathBuf::from(HID_DEVICE_PATH)).unwrap();
-    let mut desc_size: u32 = 3;
+    let mut report_descriptor_size: u32 = 3;
 
-    // Get Report Descriptor size from HIDRAW API
+    // Get Report Descriptor size from HID-RAW API
     unsafe {
-        hid_read_descr_size(file.as_raw_fd(), &mut desc_size).unwrap();
+        hid_read_report_descriptor_size(file.as_raw_fd(), &mut report_descriptor_size).unwrap();
     };
 
     let mut report = ReportDescriptor {
-        size: desc_size,
+        size: report_descriptor_size,
         raw: [0; 4096],
     };
 
@@ -54,9 +63,9 @@ fn main() {
         product_id: 0,
     };
 
-    // Get information from device
+    // Get report descriptor and device info from HID-RAW API
     unsafe {
-        hid_read_descriptor(file.as_raw_fd(), &mut report).unwrap();
+        hid_read_report_descriptor(file.as_raw_fd(), &mut report).unwrap();
         hid_read_device_info(file.as_raw_fd(), &mut device_info).unwrap();
     };
 
