@@ -8,17 +8,17 @@
 //! Following example parses a raw HID Report Descriptor
 //!
 //! ```rust
-//!     use hid_tools::report_descriptor::parse;
+//! use hid_tools::report_descriptor::parse;
 //!
-//!     let bytes = [
-//!         0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x85, 0x01, 0x05, 0x07,
-//!         0x19, 0xe0, 0x29, 0xe7, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01,
-//!         0x95, 0x08, 0x81, 0x02, 0x19, 0x01, 0x29, 0x97, 0x15, 0x00,
-//!         0x25, 0x01, 0x75, 0x01, 0x95, 0x98, 0x81, 0x02, 0xc0,
-//!     ];
+//! let bytes = [
+//!  0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x85, 0x01, 0x05, 0x07,
+//!  0x19, 0xe0, 0x29, 0xe7, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01,
+//!  0x95, 0x08, 0x81, 0x02, 0x19, 0x01, 0x29, 0x97, 0x15, 0x00,
+//!  0x25, 0x01, 0x75, 0x01, 0x95, 0x98, 0x81, 0x02, 0xc0,
+//! ];
 //!
-//!     let parsed = parse::report_descriptor(&bytes).unwrap();
-//!     println!("{}", parsed);
+//! let parsed = parse::report_descriptor(&bytes).unwrap();
+//! println!("{}", parsed);
 //! ```
 //!
 //!
@@ -55,16 +55,16 @@
 //! use hid_tools::usage_table::{UsagePage};
 //! use hid_tools::usage_table::generic_desktop::GenericDesktopControlsUsage;
 //!
-//!     let raw_report = ReportDescriptorBuilder::new()
-//!         .usage_page(UsagePage::GenericDesktopControls)
-//!         .usage(GenericDesktopControlsUsage::Mouse)
-//!         .item(Collection::Application)
-//!         // add more items here (see also examples)
-//!         .end_collection()
-//!         .build()
-//!         .bytes();
+//! let raw_report = ReportDescriptorBuilder::new()
+//!     .usage_page(UsagePage::GenericDesktopControls)
+//!     .usage(GenericDesktopControlsUsage::Mouse)
+//!     .item(Collection::Application)
+//!     // add more items here (see also examples)
+//!     .end_collection()
+//!     .build()
+//!     .bytes();
 //!
-//!     println!("{:02x?}", raw_report)
+//! println!("{:02x?}", raw_report)
 //! ```
 //!
 //! ## Report
@@ -76,18 +76,19 @@
 //! use hid_tools::report_descriptor::parse::report_descriptor;
 //! use hid_tools::report::{expected_input_reports, parse_raw_input_report};
 //!
-//!     let keyboard_report_descriptor_bytes: Vec<u8> = vec![0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x05, 0x08, 0x19, 0x01,0x29, 0x03, 0x15, 0x00, 0x25,
-//!                                                          0x01, 0x75, 0x01, 0x95, 0x03,0x91, 0x02, 0x95, 0x05, 0x91, 0x01, 0x05, 0x07, 0x19, 0xe0,0x29,
-//!                                                          0xe7, 0x95, 0x08, 0x81, 0x02, 0x75, 0x08, 0x95, 0x01,0x81, 0x01, 0x19, 0x00, 0x29, 0x91,
-//!                                                          0x26, 0xff, 0x00, 0x95, 0x06, 0x81, 0x00, 0xc0];
+//! let keyboard_report_descriptor_bytes: Vec<u8> = vec![
+//!     0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x05, 0x08, 0x19, 0x01,0x29, 0x03, 0x15, 0x00, 0x25,
+//!     0x01, 0x75, 0x01, 0x95, 0x03,0x91, 0x02, 0x95, 0x05, 0x91, 0x01, 0x05, 0x07, 0x19, 0xe0,0x29,
+//!     0xe7, 0x95, 0x08, 0x81, 0x02, 0x75, 0x08, 0x95, 0x01,0x81, 0x01, 0x19, 0x00, 0x29, 0x91,
+//!     0x26, 0xff, 0x00, 0x95, 0x06, 0x81, 0x00, 0xc0];
 //!
-//!     let event_report: Vec<u8> = vec![0x02, 0, 0x04, 0x05, 0, 0, 0, 0]; // Left shift, a and b pressed on keyboard
+//! // Left shift, a and b pressed on keyboard
+//! let event_report: Vec<u8> = vec![0x02, 0, 0x04, 0x05, 0, 0, 0, 0];
+//! let report_descriptor = report_descriptor(&keyboard_report_descriptor_bytes).unwrap();
+//! let expected_reports = expected_input_reports(&report_descriptor).unwrap();
+//! let parsed_report = parse_raw_input_report(&event_report, &expected_reports).unwrap();
 //!
-//!     let report_descriptor = report_descriptor(&keyboard_report_descriptor_bytes).unwrap();
-//!     let expected_reports = expected_input_reports(&report_descriptor).unwrap();
-//!     let parsed_report = parse_raw_input_report(&event_report, &expected_reports).unwrap();
-//!
-//!     println!("Event: {:?} \n\n{}", event_report, parsed_report);
+//! println!("Event: {:?} \n\n{}", event_report, parsed_report);
 //! ```
 //!
 //! will print

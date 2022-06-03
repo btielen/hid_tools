@@ -148,7 +148,23 @@ where
     )(input)
 }
 
-/// Parse all bytes as a vector of ReportDescriptorItem's
+/// Parse raw bytes to ReportDescriptor
+///
+/// # Example
+///
+/// ```
+/// use hid_tools::report_descriptor::parse;
+///
+/// let bytes = [
+///    0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x85, 0x01, 0x05, 0x07,
+///    0x19, 0xe0, 0x29, 0xe7, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01,
+///    0x95, 0x08, 0x81, 0x02, 0x19, 0x01, 0x29, 0x97, 0x15, 0x00,
+///    0x25, 0x01, 0x75, 0x01, 0x95, 0x98, 0x81, 0x02, 0xc0,
+/// ];
+///
+/// let parsed = parse::report_descriptor(&bytes).unwrap();
+/// println!("{}", parsed);
+/// ```
 pub fn report_descriptor(input: &[u8]) -> Result<ReportDescriptor, Error> {
     // Parse report descriptor or result in a VerboseError
     let result = full_report_descriptor::<VerboseError<&[u8]>>(input);
@@ -332,7 +348,7 @@ fn data_field_options(
 }
 
 /// Parse the payload data of Input, Output or Feature Items
-pub fn data_field_options_from_payload(
+pub(super) fn data_field_options_from_payload(
     payload: &[u8],
     bytes_to_parse: Size,
 ) -> Result<DataFieldOptions, Error> {
