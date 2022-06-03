@@ -25,7 +25,7 @@ use crate::usage_table::{UsageId, UsagePage};
 ///
 ///     println!("{:02x?}", raw_report)
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Default, Debug, PartialEq)]
 pub struct ReportDescriptorBuilder {
     items: Vec<ReportDescriptorItem>,
 }
@@ -237,12 +237,6 @@ impl ReportDescriptorBuilder {
     /// Build ReportDescriptor
     pub fn build(self) -> ReportDescriptor {
         ReportDescriptor::new(self.items)
-    }
-}
-
-impl Default for ReportDescriptorBuilder {
-    fn default() -> Self {
-        ReportDescriptorBuilder { items: Vec::new() }
     }
 }
 

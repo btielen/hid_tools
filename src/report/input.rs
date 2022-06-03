@@ -3,7 +3,7 @@ use crate::report::expected::{ExpectedField, ExpectedFieldItem};
 use crate::report_descriptor::{GlobalType, Mutability, ReportDescriptorItem, Structure};
 use crate::usage_table::{Usage, UsagePage};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub struct GlobalItemTracker {
     usage_page: Option<UsagePage>,
     report_size: Option<u32>,
@@ -13,7 +13,7 @@ pub struct GlobalItemTracker {
     logical_maximum: Option<i32>,
 }
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct LocalItemTracker<'a> {
     usage: Vec<&'a ReportDescriptorItem>,
     usage_minimum: Option<u16>,
@@ -197,29 +197,6 @@ impl<'a>
             global_items: value.1,
             local_items: value.2,
         })
-    }
-}
-
-impl Default for GlobalItemTracker {
-    fn default() -> Self {
-        GlobalItemTracker {
-            usage_page: None,
-            report_size: None,
-            report_id: None,
-            report_count: None,
-            logical_minimum: None,
-            logical_maximum: None,
-        }
-    }
-}
-
-impl<'a> Default for LocalItemTracker<'a> {
-    fn default() -> Self {
-        LocalItemTracker {
-            usage: Vec::new(),
-            usage_minimum: None,
-            usage_maximum: None,
-        }
     }
 }
 

@@ -33,9 +33,8 @@ impl ReportDescriptor {
     }
 }
 
-#[derive(Debug)]
 pub struct DeviceInfo {
-    bus_type: u32,
+    pub bus_type: u32,
     pub vendor_id: i16,
     pub product_id: i16,
 }
@@ -70,8 +69,8 @@ fn main() {
     };
 
     println!(
-        "Vendor id: {:#04x} Product id: {:#04x}",
-        device_info.vendor_id, device_info.product_id
+        "Vendor id: {:#04x} Product id: {:#04x} Bus type: {}",
+        device_info.vendor_id, device_info.product_id, device_info.bus_type
     );
 
     let parsed = hid_tools::report_descriptor::parse::report_descriptor(report.data()).unwrap();

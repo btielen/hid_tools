@@ -215,7 +215,7 @@ pub enum GlobalType {
 /// Input, Output, and Feature items are used to create data fields within a report. Here
 /// we define a struct to hold the available options.
 /// <https://www.usb.org/sites/default/files/hid1_11.pdf> - page 28
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub struct DataFieldOptions(
     Mutability,
     Structure,
@@ -302,22 +302,6 @@ impl DataFieldOptions {
     /// Get the Data enum
     pub fn data(&self) -> &Data {
         &self.8
-    }
-}
-
-impl Default for DataFieldOptions {
-    fn default() -> Self {
-        DataFieldOptions(
-            Mutability::default(),
-            Structure::default(),
-            Value::default(),
-            Wrap::default(),
-            Linear::default(),
-            State::default(),
-            NullState::default(),
-            Volatile::default(),
-            Data::default(),
-        )
     }
 }
 
