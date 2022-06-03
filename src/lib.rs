@@ -1,7 +1,10 @@
 //! Tools to work with the Human Interface Device (HID) protocol
 //!
-//! This crate provides tools for working with the Human Interface Devices (HID) protocol. It
-//! can parse, build and display Report Descriptors.
+//! The USB HID class describes devices used with nearly every modern computer. Many
+//! predefined functions exist in the USB HID class. These functions allow hardware
+//! manufacturers to design a product to USB HID class specifications and expect it
+//! to work with any software that also meets these specifications. This crate provides some
+//! tools to parse, build and display Report Descriptors and data reports.
 //!
 //! ## Getting started
 //!
