@@ -1,7 +1,15 @@
+use std::fmt::{Display, Formatter};
 /**
 
 This examples reads raw report & report descriptor data from the linux kernel using the
 HID-RAW API. The `nix` crate bridges this example and the kernel.
+
+## Setup permissions
+
+The following line was placed in a .rules file (I named mine 99-hidraw-permissions.rules) located under /etc/udev/rules.d
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", MODE="0664", GROUP="plugdev"
+
+Restart your computer afterwards
 
 */
 use hid_tools::report::{expected_input_reports, parse_raw_input_report};
@@ -9,10 +17,10 @@ use nix::ioctl_read;
 use std::fs;
 use std::io::Read;
 use std::os::unix::io::AsRawFd;
-use std::path::PathBuf;
+use std::path::Path;
 
 // Change the path for your device
-const HID_DEVICE_PATH: &str = "/dev/hidraw1";
+const HID_DEVICE_PATH: &str = "/dev/hidraw3";
 
 // Create functions to read data from kernel
 // For declarations of the SPI_IOC_MAGIC and SPI_IOC_TYPE_MODE, see
@@ -28,39 +36,47 @@ pub struct ReportDescriptor {
 }
 
 impl ReportDescriptor {
+    fn new(size: u32, raw: [u8; 4096]) -> Self {
+        ReportDescriptor {
+            size,
+            raw
+        }
+    }
+}
+
+impl ReportDescriptor {
     pub fn data(&self) -> &[u8] {
         &self.raw[0..self.size as usize]
     }
 }
 
+#[derive(Default)]
 pub struct DeviceInfo {
     pub bus_type: u32,
     pub vendor_id: i16,
     pub product_id: i16,
 }
 
+impl Display for DeviceInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Vendor id: {:#04x} Product id: {:#04x} Bus type: {}", self.vendor_id, self.product_id, self.bus_type)
+    }
+}
+
 fn main() {
     let mut options = fs::OpenOptions::new();
     options.read(true);
 
-    let mut file = options.open(PathBuf::from(HID_DEVICE_PATH)).unwrap();
-    let mut report_descriptor_size: u32 = 3;
+    let mut file = options.open(Path::new(HID_DEVICE_PATH)).unwrap();
+    let mut report_descriptor_size: u32 = 0;
 
     // Get Report Descriptor size from HID-RAW API
     unsafe {
         hid_read_report_descriptor_size(file.as_raw_fd(), &mut report_descriptor_size).unwrap();
     };
 
-    let mut report = ReportDescriptor {
-        size: report_descriptor_size,
-        raw: [0; 4096],
-    };
-
-    let mut device_info = DeviceInfo {
-        bus_type: 0,
-        vendor_id: 0,
-        product_id: 0,
-    };
+    let mut report = ReportDescriptor::new(report_descriptor_size, [0; 4096]);
+    let mut device_info = DeviceInfo::default();
 
     // Get report descriptor and device info from HID-RAW API
     unsafe {
@@ -68,10 +84,7 @@ fn main() {
         hid_read_device_info(file.as_raw_fd(), &mut device_info).unwrap();
     };
 
-    println!(
-        "Vendor id: {:#04x} Product id: {:#04x} Bus type: {}",
-        device_info.vendor_id, device_info.product_id, device_info.bus_type
-    );
+    println!("{}", device_info);
 
     let parsed = hid_tools::report_descriptor::parse::report_descriptor(report.data()).unwrap();
     println!("{}", parsed);
